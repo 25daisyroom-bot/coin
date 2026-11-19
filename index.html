@@ -241,6 +241,14 @@
     #dstyle .ddel{font-size:20px;padding:0 4px}
     #dstyle .dsp{display:none}
   }
+
+  /* 좁은 화면: 툴바의 "고래·청산" 버튼으로 왼쪽 목록을 차트 위에 겹쳐서 열기/닫기 */
+  #whaleBtn{display:none;flex:none}
+  #whaleBtn.act{background:var(--accent);border-color:var(--accent);color:#fff}
+  @media (max-width:900px),(max-height:500px){
+    #whaleBtn{display:inline-block}
+    body.showAside aside{display:flex;position:fixed;z-index:40;left:env(safe-area-inset-left,0px);top:var(--asideTop,90px);bottom:env(safe-area-inset-bottom,0px);width:min(300px,86vw);border:1px solid var(--line);border-left:0;box-shadow:8px 0 24px rgba(0,0,0,.5)}
+  }
 </style>
 </head>
 <body>
@@ -313,6 +321,7 @@
       <button data-tf="30m">30m</button><button data-tf="1h">1H</button>
       <button data-tf="4h">4H</button><button data-tf="1d">1D</button>
       <span class="sp"></span>
+      <button id="whaleBtn" type="button" title="고래 체결 · 청산 목록 열기/닫기">고래·청산</button>
     </div>
     <div id="chartRow">
       <div id="dtools"></div>
@@ -1836,6 +1845,16 @@ $('chkVol').onchange = e => volume.applyOptions({visible:e.target.checked});
   const onfs=()=>{ if(!isFs()&&pseudo) setPseudo(false); else upd(); };
   document.addEventListener('fullscreenchange',onfs); document.addEventListener('webkitfullscreenchange',onfs);
   upd();
+})();
+
+(function(){      // 좁은 화면에서 고래 체결·청산 목록 열기/닫기
+  const btn=$('whaleBtn'), mq=matchMedia('(max-width:900px), (max-height:500px)');
+  const set=on=>{ if(on) document.documentElement.style.setProperty('--asideTop',Math.round($('tfBar').getBoundingClientRect().bottom)+'px');
+    document.body.classList.toggle('showAside',on); btn.classList.toggle('act',on); };
+  btn.onclick=e=>{ e.stopPropagation(); set(!document.body.classList.contains('showAside')); };
+  document.addEventListener('click',e=>{ if(document.body.classList.contains('showAside')&&!e.target.closest('aside')&&!e.target.closest('#whaleBtn')) set(false); });
+  const mqc=()=>{ if(!mq.matches) set(false); };
+  mq.addEventListener?mq.addEventListener('change',mqc):mq.addListener(mqc);
 })();
 
 setInterval(()=>{ $('clock').textContent = new Date().toLocaleTimeString('ko-KR',{hour12:false}); renderWhales(); renderLiqs(); }, 1000);
