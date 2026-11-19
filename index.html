@@ -658,62 +658,85 @@ function onTrade(d){
   const p=+d.p, usd=p*+d.q;
   addWhale({t:d.T,p,usd,buy:!d.m,ex:'binance'});      // m=true → 매수자가 메이커 → 시장가 매도
 }
-/* ---------- 고래 사운드 (WebAudio 합성 차임, 외부 파일 없음) ----------
-   매수 = 밝은 상승 차임 / 매도 = 부드러운 하강 차임. 체결 규모(임계값 대비 배수)가 클수록 음이 늘어남.
-   두 방향의 체감 음량이 같도록 음높이별 보정 + 컴프레서 + 로우패스로 거슬리지 않게 처리 */
-const SND = {ctx:null, master:null, ready:false, last:0};
-const HZ = {E4:329.63, G4:415.30, B4:493.88, E5:659.25, G5:830.61, B5:987.77, E6:1318.51};   // E 메이저 펜타토닉 계열
-const SND_SEQ = {
-  buy:  {1:['E5','B5'],        2:['E5','G5','B5'],        3:['E5','G5','B5','E6']},
-  sell: {1:['B4','E4'],        2:['B4','G4','E4'],        3:['E5','B4','G4','E4']}
+/* ---------- 고래 사운드 (WebAudio 합성, 외부 파일 없음) ----------
+   칼림바(엄지피아노) 음색 버전: 금속 건반을 엄지로 튕기는 "띵~" 소리를 합성
+   · 음높이: 매수 E5(659.26Hz) / 매도 B4(493.88Hz) — 기존 알림음과 동일 (매수/매도 구분 유지)
+   · 음색: 기음(사인파) + 살짝 어긋난 쌍둥이 기음(칼림바 특유의 은은한 울렁임) + 2배음
+           + 금속 건반의 비조화 배음(약 6.27배, 아주 짧게 "띵" 하고 사라짐) + 엄지가 닿는 순간의 짧은 "톡" 노이즈
+   · 길이: 약 1초, 바로 튕기는 어택(3ms) 뒤 자연스럽게 사라짐
+   ※ 매수/매도가 반대로 들리면 아래 SND_PITCH 의 buy 와 sell 값만 서로 바꾸면 됨
+   ※ 더 또렷하고 반짝이게는 SND_TINE 을 키우고, 더 둥글고 포근하게는 줄이면 됨 / 울렁임의 세기는 SND_PARTIALS 의 두 번째 줄 크기로 조절 */
+const SND = {ctx:null, master:null, ready:false, last:0, noise:null};
+const SND_PITCH = {buy:659.26, sell:493.88};
+const SND_NOTE = {                        // 음별 상대 음량(g) — 낮은 B4 는 체감이 작아 조금 키움
+  659.26: {g:1.0},
+  493.88: {g:1.35}
 };
+const SND_BASE = 0.22;      // 전체 기준 음량(슬라이더 60% 에서 기존 소리와 비슷한 체감 크기)
+const SND_BIG_X = 4;        // 체결액이 임계값의 몇 배 이상이면 '큰 체결' 음량으로 울릴지
+const SND_BIG_GAIN = 1.63;  // 큰 체결 음량 배수
+const SND_LEVEL = 0.55;     // 칼림바 음색의 기음 크기(기존 알림음과 체감 음량을 맞춘 값)
+const SND_TINE = 1.0;       // 금속 "띵" 소리(6.27배음)·엄지 "톡" 소리의 세기 배수: 1.4 면 더 또렷, 0.6 이면 더 둥글게
+const SND_PARTIALS = [      // [주파수 배수, 상대 크기, 거의 사라지는 데 걸리는 시간(초)]
+  [1,     1.00, 0.95],      // 기음(사인파) — 소리의 몸통, 길게 울림
+  [1.004, 0.28, 0.80],      // 살짝 어긋난 쌍둥이 기음 — 약 2.6Hz 느린 울렁임(칼림바 특유의 "우웅~")
+  [2,     0.15, 0.40],      // 옥타브 위 — 맑은 윤곽
+  [6.27,  0.20, 0.07]       // 금속 건반의 비조화 배음 — 튕기는 순간에만 "띵" 하고 사라짐
+];
 function sndInit(){
   if (SND.ctx) return;
   try{
     const c = SND.ctx = new (window.AudioContext||window.webkitAudioContext)();
-    const comp = c.createDynamicsCompressor();
-    comp.threshold.value = -22; comp.ratio.value = 3; comp.attack.value = 0.01; comp.release.value = 0.3;
-    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2800; lp.Q.value = 0.3;
+    // 여러 체결이 겹쳐 0dB 를 넘을 때만 작동하는 리미터(임계값 0dB → 평소엔 원음 그대로, 자동 메이크업 게인도 1배)
+    const lim = c.createDynamicsCompressor();
+    lim.threshold.value = 0; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.002; lim.release.value = 0.1;
     SND.master = c.createGain(); SND.master.gain.value = $('sndVol').value/100;
-    // 짧은 에코로 여운을 살짝 더함
-    const dly = c.createDelay(0.5); dly.delayTime.value = 0.11;
-    const fb = c.createGain(); fb.gain.value = 0.32; const wet = c.createGain(); wet.gain.value = 0.28;
-    dly.connect(fb); fb.connect(dly); dly.connect(wet);
-    SND.in = c.createGain(); SND.in.connect(lp); SND.in.connect(dly); wet.connect(lp);
-    lp.connect(comp); comp.connect(SND.master); SND.master.connect(c.destination);
+    lim.connect(SND.master); SND.master.connect(c.destination);
+    SND.in = lim;
+    // 엄지가 건반을 튕기는 순간의 "톡" 소리용 짧은 백색 소음(1회만 만들어 재사용)
+    const nb = c.createBuffer(1, Math.ceil(c.sampleRate*0.04), c.sampleRate), nd = nb.getChannelData(0);
+    for (let i = 0; i < nd.length; i++) nd[i] = Math.random()*2 - 1;
+    SND.noise = nb;
     SND.ready = true;
   }catch(e){ SND.ctx = null; }
 }
 // 브라우저 자동재생 정책: 화면을 한 번 클릭/키 입력하면 소리가 활성화됨
 ['pointerdown','keydown'].forEach(ev => window.addEventListener(ev, ()=>{ sndInit(); if (SND.ctx && SND.ctx.state==='suspended') SND.ctx.resume(); }, {passive:true}));
-function sndNote(freq, t, dur, vol){
-  const c = SND.ctx, g = c.createGain();
-  // 기음 + 2배음 + 약한 비화성 부분음 = 맑은 벨 느낌
-  [[1,1],[2,0.12],[3,0.025]].forEach(([m,a])=>{
-    const o = c.createOscillator(), og = c.createGain();
-    o.type = 'sine'; o.frequency.value = freq*m; og.gain.value = a;
-    o.connect(og); og.connect(g); o.start(t); o.stop(t+dur+0.05);
+function sndNote(f, t, vol){               // 칼림바 한 음: 배음마다 따로 사라지는 사인파 + 엄지 "톡" 노이즈
+  const c = SND.ctx, env = c.createGain(), vg = c.createGain(), nodes = [env, vg];
+  env.gain.setValueAtTime(0, t);
+  env.gain.linearRampToValueAtTime(1, t + 0.003);          // 튕기는 순간 3ms 어택
+  vg.gain.value = vol;
+  env.connect(vg); vg.connect(SND.in);
+  let longest = null;
+  SND_PARTIALS.forEach(([m, a, d], i) => {
+    const o = c.createOscillator(), pg = c.createGain(), fr = f * m;
+    const amp = a * (i === 3 ? SND_TINE : 1) * SND_LEVEL;
+    o.type = 'sine';
+    o.frequency.setValueAtTime(fr * 1.01, t);              // 튕긴 직후 건반이 아주 살짝 높았다가
+    o.frequency.exponentialRampToValueAtTime(fr, t + 0.03); // 30ms 안에 제 음으로 안착
+    pg.gain.setValueAtTime(amp, t);
+    pg.gain.exponentialRampToValueAtTime(amp * 0.001, t + d);   // 배음마다 사라지는 속도가 다름(높은 배음일수록 빨리)
+    o.connect(pg); pg.connect(env); o.start(t); o.stop(t + d + 0.02);
+    nodes.push(o, pg); if (i === 0) longest = o;
   });
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(vol, t+0.025);              // 아주 부드러운 어택
-  g.gain.exponentialRampToValueAtTime(0.0001, t+dur);             // 벨처럼 자연스럽게 감쇠
-  g.connect(SND.in);
+  const ns = c.createBufferSource(), bp = c.createBiquadFilter(), ng = c.createGain();
+  ns.buffer = SND.noise;
+  bp.type = 'bandpass'; bp.frequency.value = Math.min(5000, f * 4); bp.Q.value = 1.4;
+  ng.gain.setValueAtTime(0.35 * SND_TINE, t);
+  ng.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
+  ns.connect(bp); bp.connect(ng); ng.connect(env); ns.start(t);
+  nodes.push(ns, bp, ng);
+  longest.onended = () => { nodes.forEach(n => { try{ n.disconnect(); }catch(e){} }); };
 }
 function playWhale(w){
   if (!$('chkSnd').checked || !SND.ready || !SND.ctx || SND.ctx.state!=='running') return;
-  const ratio = w.usd / state.thr;
-  const tier = ratio >= 8 ? 3 : ratio >= 3 ? 2 : 1;                 // 1=소 2=중 3=대
+  const big = w.usd >= state.thr * SND_BIG_X;
   const now = performance.now();
-  if (now - SND.last < (tier===1 ? 250 : tier===2 ? 150 : 60)) return;   // 작은 체결이 몰릴 때 소리 겹침 방지
+  if (now - SND.last < (big ? 60 : 120)) return;   // 체결이 몰릴 때 소리가 기관총처럼 겹치지 않게 최소 간격
   SND.last = now;
-  const notes = SND_SEQ[w.buy ? 'buy' : 'sell'][tier];
-  const step = 0.095, t0 = SND.ctx.currentTime + 0.01;
-  const base = 0.11 + 0.03*tier;                                    // 규모가 클수록 조금 더 크게
-  notes.forEach((k,i)=>{
-    const f = HZ[k], last = i === notes.length-1;
-    const eq = f < 500 ? 1.5 : f < 700 ? 1.2 : 1;                   // 낮은 음은 같은 음량이어도 작게 들려서 보정
-    sndNote(f, t0 + i*step, last ? (tier===3 ? 1.2 : 0.8) : 0.45, base*eq);
-  });
+  const f = SND_PITCH[w.buy ? 'buy' : 'sell'];
+  sndNote(f, SND.ctx.currentTime + 0.01, SND_BASE * SND_NOTE[f].g * (big ? SND_BIG_GAIN : 1));
 }
 $('sndVol').oninput = e => { if (SND.master) SND.master.gain.value = e.target.value/100; };
 /* ---------- 고래 플래시: 100만 달러 이상 체결 시 차트 절반에 그라데이션이 깜박임 ----------
