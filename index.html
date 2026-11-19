@@ -3,7 +3,11 @@
 <head>
 <meta charset="utf-8">
 <title>내 퀀트 대시보드</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#11151d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
   :root{
     --bg:#0b0e14; --panel:#11151d; --line:#1f2633; --txt:#d7dde8; --dim:#7d879a;
@@ -149,6 +153,94 @@
   #chartWrap.carrow,#chartWrap.carrow *{cursor:default!important}
   #chartWrap.cdot,#chartWrap.cdot *{cursor:none!important}
   #chartWrap.dmove,#chartWrap.dmove *{cursor:move!important}
+
+  /* ============================================================
+     모바일 / 태블릿 대응 (가로·세로 자동 맞춤, 분할선 길게 눌러 조절, 전체화면)
+     ============================================================ */
+  html,body{overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  #app{height:100vh;height:100dvh;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+  select,button{touch-action:manipulation}
+  #chartRow,#chartWrap{min-height:80px}
+  #posPanel{min-height:64px}
+
+  /* 차트 ↔ 포지션 경계선 (분할선) */
+  #split{position:relative;z-index:5;height:8px;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;transition:background .12s}
+  #split::after{content:"";position:absolute;left:50%;top:50%;width:44px;height:3px;margin:-1.5px 0 0 -22px;border-radius:2px;background:#4a5568;transition:background .12s}
+  #split.press{background:#2a4a85}
+  #split.grab{background:var(--accent)}
+  #split.grab::after{background:#fff}
+  body.resizing,body.resizing *{cursor:row-resize!important;-webkit-user-select:none!important;user-select:none!important}
+  @media (pointer:coarse){
+    #split{height:16px}
+    #split::before{content:"";position:absolute;left:0;right:0;top:-8px;bottom:-8px}   /* 손가락 터치 영역 확대 */
+    #split::after{width:56px;height:4px;margin:-2px 0 0 -28px}
+  }
+  /* 분할선을 끝까지 끌었을 때: 차트 전체 / 포지션 전체 */
+  main.fullChart #posPanel{display:none}
+  main.fullPanel #chartRow{display:none}
+  main.fullPanel #posPanel{flex:1 1 auto;height:auto!important}
+
+  /* 전체화면 모드(작은 화면): 상단 시세 줄과 하단 요약을 접어서 차트·포지션이 화면을 다 씀 */
+  @media (max-width:900px),(max-height:500px){ body.pfs header,body.pfs #foot{display:none} }
+
+  /* 폰·태블릿 세로/가로 공통 */
+  @media (max-width:900px),(max-height:500px){
+    #app{grid-template-columns:1fr}
+    aside{display:none}
+    header{grid-column:1;flex-wrap:nowrap;gap:12px;padding:6px 10px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    header::-webkit-scrollbar{display:none}
+    header .sym{position:sticky;left:0;z-index:3;flex:none;gap:10px;padding-right:10px;background:var(--panel)}
+    header .stat{flex:none;white-space:nowrap}
+    header .conn{flex:none;margin-left:0;white-space:nowrap}
+    .symTxt b{font-size:16px}
+    .price{font-size:17px}
+    #symPop{position:fixed;left:8px;right:8px;top:calc(env(safe-area-inset-top,0px) + 54px);width:auto;max-height:calc(100vh - 70px);max-height:calc(100dvh - 70px)}
+    #symQ{font-size:16px}               /* iOS 입력창 자동 확대 방지 */
+    .toolbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:5px;padding:5px 8px}
+    .toolbar::-webkit-scrollbar{display:none}
+    .toolbar button{flex:none;min-height:30px;padding:4px 10px}
+    #dtools{width:42px}
+    .dbtn{width:36px}
+    #chartRow{position:relative}
+    #optSide{padding:0 1px}
+    #optPanel{position:absolute;right:30px;top:0;bottom:0;width:176px;z-index:30;background:var(--panel);border-left:1px solid var(--line);box-shadow:-8px 0 20px rgba(0,0,0,.35)}
+    .ptabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:0 4px}
+    .ptabs::-webkit-scrollbar{display:none}
+    .ptab{flex:none;padding:8px 10px}
+    .pright{gap:10px}
+    #foot{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:16px;padding:5px 10px}
+    #foot::-webkit-scrollbar{display:none}
+    #foot .stat{flex:none;white-space:nowrap}
+    table.bb th,table.bb td{padding:6px}
+  }
+  /* 폰 가로모드(세로 공간이 좁을 때) */
+  @media (max-height:500px){
+    header{padding:3px 10px;gap:10px}
+    .symTxt .sub{display:none}
+    #symIcon .coin{width:24px!important;height:24px!important}
+    .symTxt b{font-size:14px}
+    .price{font-size:15px}
+    #symPop{top:calc(env(safe-area-inset-top,0px) + 42px);max-height:calc(100vh - 54px);max-height:calc(100dvh - 54px)}
+    .toolbar{padding:3px 8px}
+    .toolbar button{min-height:26px;padding:2px 9px}
+    .ptab{padding:6px 10px}
+    #foot{display:none}
+  }
+
+  /* 터치 기기: 도구모음 하위 메뉴·스타일 바 크기 */
+  @media (hover:none){ .dcar{display:flex} }
+  @media (max-width:900px),(max-height:500px){ #dtools{width:46px} .dcar{right:-5px;width:12px} }
+  @media (pointer:coarse){
+    #chartWrap{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+    .dfly .dfi{padding:10px 16px 10px 10px;font-size:14px}
+    .dfly.grid{grid-template-columns:repeat(4,46px)}
+    .dfly.grid .dfi{padding:8px}
+    #dstyle{flex-wrap:wrap;justify-content:center;width:max-content;max-width:calc(100% - 12px);gap:6px 8px;padding:6px 8px}
+    #dstyle .dc{width:22px;height:22px}
+    #dstyle .dw{width:30px;height:28px}
+    #dstyle .ddel{font-size:20px;padding:0 4px}
+    #dstyle .dsp{display:none}
+  }
 </style>
 </head>
 <body>
@@ -243,14 +335,15 @@
           <label class="chk"><input type="checkbox" id="chkSnd" checked>고래 사운드</label>
           <input type="range" id="sndVol" min="0" max="100" value="60" title="사운드 볼륨">
           <label class="chk"><input type="checkbox" id="chkVol" checked>거래량</label>
-          <label class="chk"><input type="checkbox" id="chkLines" checked>내 포지션·주문 라인</label>
+          <label class="chk" hidden><input type="checkbox" id="chkLines">내 포지션·주문 라인</label>
           <label class="chk"><input type="checkbox" id="chkDay" checked>일봉 캔들</label>
           <label class="chk"><input type="checkbox" id="chkSig" checked>진입 신호</label>
           <label class="chk"><input type="checkbox" id="chkHL" checked>최고·최저가 표시</label>
         </div>
       </div>
     </div>
-    <div id="split" title="드래그해서 패널 높이 조절"></div>
+    <div hidden>
+<div id="split" title="길게 눌러 위아래로 드래그: 높이 조절 · 더블탭: 차트 전체화면"></div>
     <div id="posPanel">
       <div class="ptabs" id="ptabs">
         <div class="ptab on" data-tab="pos">포지션<span class="cnt" id="cntPos"></span></div>
@@ -265,6 +358,7 @@
         </div>
       </div>
       <div class="pbody" id="pbody"></div>
+    </div>
     </div>
     <div id="foot">
       <div class="stat"><span class="k">고래 매수 누적</span><span class="num up" id="fBuy">-</span></div>
@@ -292,7 +386,7 @@ const REST = 'https://fapi.binance.com';
 const WS   = 'wss://fstream.binance.com/market/stream?streams=';   // 2026-04 이후 필수: /market 경로
 const KST  = 9 * 3600;                       // 차트 시간을 한국 시간으로 표시
 const TF_SEC = {'1m':60,'3m':180,'5m':300,'15m':900,'30m':1800,'1h':3600,'4h':14400,'1d':86400};
-const HAS_SERVER = location.protocol === 'http:' || location.protocol === 'https:';   // dashboard_server.py 로 접속했는지
+const HAS_SERVER = false;   // 보기 전용: 내 서버(포지션·주문)에 연결하지 않음 —   // dashboard_server.py 로 접속했는지
 
 const $ = id => document.getElementById(id);
 const state = {
@@ -1114,19 +1208,6 @@ $('pbody').addEventListener('click', e => {        // 행을 누르면 그 심�
   const tr = e.target.closest('tr[data-sym]'); if (tr) switchSymbol(tr.dataset.sym);
 });
 
-// 패널 높이 조절 (구분선 드래그)
-(() => {
-  const sp = $('split'), panel = $('posPanel'); let drag = false;
-  sp.addEventListener('mousedown', e => { drag = true; document.body.style.userSelect = 'none'; e.preventDefault(); });
-  window.addEventListener('mousemove', e => {
-    if (!drag) return;
-    const m = document.querySelector('main').getBoundingClientRect();
-    const h = Math.max(90, Math.min(m.height - 240, m.bottom - $('foot').offsetHeight - e.clientY));
-    panel.style.height = h + 'px';
-  });
-  window.addEventListener('mouseup', () => { drag = false; document.body.style.userSelect = ''; });
-})();
-
 /* ============================================================
    TradingView 스타일 그리기 도구모음 (왼쪽) + 우하단 시계
    ============================================================ */
@@ -1258,6 +1339,7 @@ function openFly(g,b){
     refreshBar(); draw(); });
 }
 document.addEventListener('mousedown',e=>{ if(fly&&!fly.contains(e.target)&&!e.target.closest('.dcar')) closeFly(); });
+document.addEventListener('touchstart',e=>{ if(fly&&!fly.contains(e.target)&&!e.target.closest('.dcar')) closeFly(); },{capture:true,passive:true});
 
 /* ---------- 좌표 변환 (시간·가격 ↔ 화면) ---------- */
 let B=null;
@@ -1382,11 +1464,12 @@ function draw(){
 
 /* ---------- 선택 / 이동 / 생성 ---------- */
 const segDist=(x,y,[x1,y1,x2,y2])=>{const dx=x2-x1,dy=y2-y1,l=dx*dx+dy*dy;let t=l?((x-x1)*dx+(y-y1)*dy)/l:0;t=Math.max(0,Math.min(1,t));return Math.hypot(x-(x1+t*dx),y-(y1+t*dy));};
+let HT=1;   // 터치일 때 선택 판정 범위 배율
 function hit(x,y){
   if (D.lock||D.hide) return null;
-  if (D.sel&&D.sel._hd) for (let i=0;i<D.sel._hd.length;i++){ const h=D.sel._hd[i]; if(Math.hypot(h[0]-x,h[1]-y)<8) return {d:D.sel,i}; }
+  if (D.sel&&D.sel._hd) for (let i=0;i<D.sel._hd.length;i++){ const h=D.sel._hd[i]; if(Math.hypot(h[0]-x,h[1]-y)<8*HT) return {d:D.sel,i}; }
   for (let k=D.list.length-1;k>=0;k--){ const d=D.list[k]; if(!d._segs) continue;
-    for (const s of d._segs) if (segDist(x,y,s)<6) return {d,i:-1};
+    for (const s of d._segs) if (segDist(x,y,s)<6*HT) return {d,i:-1};
     for (const r of d._rects) if (x>=r[0]&&x<=r[0]+r[2]&&y>=r[1]&&y<=r[1]+r[3]) return {d,i:-1};
     if (d._ell){ const [cx,cy,rx,ry]=d._ell; if (((x-cx)/rx)**2+((y-cy)/ry)**2<=1) return {d,i:-1}; } }
   return null;
@@ -1472,6 +1555,66 @@ wrap.addEventListener('dblclick',e=>{
 },true);
 window.addEventListener('mousemove',onMove);
 window.addEventListener('mouseup',onUp);
+
+/* ---------- 터치 지원: 손가락으로 그리기 / 선택 / 이동 ----------
+   · 도구를 고른 상태 또는 도면 위를 누르면 그리기가 손가락을 가져가고, 그 밖의 곳은 차트가 그대로 밀기/확대(핀치) 처리
+   · 두 점 도구: 드래그로 그리거나, 점 두 곳을 차례로 탭   · 경로: 점을 탭으로 찍고 더블탭으로 끝냄   · 텍스트: 더블탭으로 수정 */
+let TT=null, lastTap={t:0,x:0,y:0};
+const tfake=(t,e)=>({button:0,target:e.target,clientX:t.clientX,clientY:t.clientY,stopPropagation(){},preventDefault(){}});
+const tFind=(list,id)=>{ for(const t of list) if(t.identifier===id) return t; return null; };
+function dblTouch(m){
+  const d=D.draft;
+  if (d&&d.type==='path'){ d.pts.splice(-2); d.pts.length>=2?fin(d):(cancelDraft(),draw()); return; }
+  const h=!D.tool&&hit(m.x,m.y);
+  if (h&&h.d.type==='text'){ const s=prompt('텍스트 수정',h.d.text); if(s){ pushHist(ser()); h.d.text=s; save(); draw(); } }
+}
+wrap.addEventListener('touchstart',e=>{
+  if (e.target.closest('#dstyle,#zoomReset')) return;
+  if (TT!==null){ e.stopPropagation(); e.preventDefault(); return; }      // 그리는 중 다른 손가락은 무시
+  if (e.touches.length>1) return;                                          // 두 손가락 = 차트 핀치
+  const t=e.touches[0], m=pos(t); if(!inPlot(m)) return;
+  HT=2.4;
+  try{
+    const own=!!D.tool||!!hit(m.x,m.y);
+    D.mouse=m;
+    if (own){ e.stopPropagation(); e.preventDefault(); TT=t.identifier; }
+    onDown(tfake(t,e));
+    if (own){
+      const now=Date.now();
+      if (now-lastTap.t<350&&Math.hypot(m.x-lastTap.x,m.y-lastTap.y)<30){ lastTap.t=0; dblTouch(m); }
+      else lastTap={t:now,x:m.x,y:m.y};
+    }
+  } finally { HT=1; }
+},{capture:true,passive:false});
+wrap.addEventListener('touchmove',e=>{
+  if (TT===null) return;
+  const t=tFind(e.touches,TT); if(!t) return;
+  e.stopPropagation(); e.preventDefault();
+  onMove(tfake(t,e));
+},{capture:true,passive:false});
+const tEnd=e=>{
+  if (TT===null||tFind(e.touches,TT)) return;
+  e.stopPropagation(); if(e.cancelable) e.preventDefault();
+  TT=null; onUp(); D.mouse=null; draw();
+};
+wrap.addEventListener('touchend',tEnd,{capture:true,passive:false});
+wrap.addEventListener('touchcancel',tEnd,{capture:true,passive:false});
+
+/* 왼쪽 도구모음: 하위 도구가 있는 버튼은 길게 누르면 펼침 (▸ 도 누를 수 있음) */
+(() => {
+  let tm=0, swallow=false;
+  bar.addEventListener('touchstart',e=>{
+    swallow=false; clearTimeout(tm);
+    const b=e.target.closest('.dbtn'); if(!b||e.touches.length!==1) return;
+    const g=gById(b.dataset.g); if(!g||!((g.items&&g.items.length>1)||g.id==='emoji')) return;
+    tm=setTimeout(()=>{ swallow=true; try{ navigator.vibrate&&navigator.vibrate(10); }catch{} openFly(g,b); },450);
+  },{passive:true});
+  const stop=()=>clearTimeout(tm);
+  bar.addEventListener('touchmove',stop,{passive:true});
+  bar.addEventListener('touchend',stop,{passive:true});
+  bar.addEventListener('touchcancel',stop,{passive:true});
+  bar.addEventListener('click',e=>{ if(swallow){ swallow=false; e.stopImmediatePropagation(); e.stopPropagation(); } },true);
+})();
 window.addEventListener('keydown',e=>{
   if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
   const AL={KeyT:'trend',KeyH:'hline',KeyV:'vline',KeyF:'fib'};
@@ -1675,16 +1818,23 @@ $('chkVol').onchange = e => volume.applyOptions({visible:e.target.checked});
   let v='0'; try{ v=localStorage.getItem('optOpen')||'0'; }catch{}
   set(v==='1');
 })();
-(function(){      // 전체화면 모드 (대시보드 전체, 종료는 버튼 또는 Esc)
+(function(){      // 전체화면 모드 (종료는 버튼 또는 Esc / 폰에서는 상단 시세·하단 요약을 접어 차트와 포지션을 크게)
   const btn=$('fsBtn'), el=document.documentElement;
   const rq=el.requestFullscreen||el.webkitRequestFullscreen;
-  if (!rq){ btn.style.display='none'; return; }
+  const ex=document.exitFullscreen||document.webkitExitFullscreen;
   const svg=d=>`<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
   const ENTER=svg('M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4'), EXIT=svg('M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4');
   const isFs=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
-  const upd=()=>{ btn.innerHTML=isFs()?EXIT:ENTER; btn.title=isFs()?'전체화면 종료 (Esc)':'전체화면'; };
-  btn.onclick=()=>{ try{ isFs() ? (document.exitFullscreen||document.webkitExitFullscreen).call(document) : rq.call(el); }catch{} };
-  document.addEventListener('fullscreenchange',upd); document.addEventListener('webkitfullscreenchange',upd);
+  let pseudo=false;                                   // iPhone Safari 등 Fullscreen API가 없는 기기용 대체 전체화면
+  const upd=()=>{ const on=isFs()||pseudo; btn.innerHTML=on?EXIT:ENTER; btn.title=on?'전체화면 종료':'전체화면'; };
+  const setPseudo=on=>{ pseudo=on; document.body.classList.toggle('pfs',on); upd(); };
+  btn.onclick=()=>{
+    if (isFs()||pseudo){ try{ if(isFs()) ex.call(document); }catch{} setPseudo(false); return; }
+    setPseudo(true);
+    if (rq){ try{ const p=rq.call(el); if(p&&p.catch) p.catch(()=>{}); }catch{} }
+  };
+  const onfs=()=>{ if(!isFs()&&pseudo) setPseudo(false); else upd(); };
+  document.addEventListener('fullscreenchange',onfs); document.addEventListener('webkitfullscreenchange',onfs);
   upd();
 })();
 
