@@ -288,8 +288,10 @@
     <div class="box">
       <h3><span>고래 체결 (Whale Trades)</span>
         <select id="thrSel">
-          <option value="50000">≥ $50K</option>
-          <option value="100000" selected>≥ $100K</option>
+          <option value="10000">≥ $10K</option>
+          <option value="25000">≥ $25K</option>
+          <option value="50000" selected>≥ $50K</option>
+          <option value="100000">≥ $100K</option>
           <option value="250000">≥ $250K</option>
           <option value="500000">≥ $500K</option>
           <option value="1000000">≥ $1M</option>
@@ -301,8 +303,9 @@
       <div class="bar"><i id="wBar"></i></div>
     </div>
     <div class="box">
-      <h3><span>청산 (전체 선물 시장)</span>
+      <h3><span>청산 (현재 코인)</span>
         <select id="liqSel">
+          <option value="1000">≥ $1K</option>
           <option value="5000">≥ $5K</option>
           <option value="20000" selected>≥ $20K</option>
           <option value="100000">≥ $100K</option>
@@ -400,7 +403,7 @@ const HAS_SERVER = false;   // 보기 전용: 내 서버(포지션·주문)에 �
 
 const $ = id => document.getElementById(id);
 const state = {
-  sym: 'BTCUSDT', tf: '1m', thr: 100000, liqThr: 20000,
+  sym: 'BTCUSDT', tf: '1m', thr: 50000, liqThr: 20000,
   whales: [], liqs: [], symLiqs: [],
   stats: {buy:0, sell:0, ll:0, ls:0, since: Date.now()},
   lastCandle: null, lastVol: 0, hover: null, ws: null, reconnect: 0, closed: false,
@@ -819,6 +822,7 @@ function onLiq(o){
 }
 function addLiq(item){       // 모든 거래소 공통: item = {t, s(예 BTCUSDT), usd, longLiq, p, ex}
   if (!exOn[item.ex]) return;
+  if (item.s !== state.sym) return;      // 지금 보고 있는 코인의 청산만 표시·집계 (목록·사운드·하단 누적·차트 마커 모두)
   const usd = item.usd;
   if (item.longLiq) state.stats.ll += usd; else state.stats.ls += usd;
   if (usd >= state.liqThr){
@@ -829,7 +833,7 @@ function addLiq(item){       // 모든 거래소 공통: item = {t, s(예 BTCUSD
   }
   if (item.s === state.sym){
     state.symLiqs.push(item);
-    if (state.symLiqs.length > 300) state.symLiqs.shift();
+    if (state.symLiqs.length > 3000) state.symLiqs.shift();     // 청산 마커·진입 신호 계산용 (캔들별 합산)
   }
   renderFoot();
 }
@@ -1742,49 +1746,63 @@ clock(); setInterval(clock,1000);
 load(D.sym); buildBar(); applyCursor(); size(); draw();
 })();
 
-/* ---------- 진입 신호 마커 (bybit.py 와 동일: RSI 과매도/과매수 기억 → RSI·RSI이평 크로스) ---------- */
+/* ---------- 진입 신호 마커 (bybitdemo.py 와 동일한 진입조건) ----------
+   공통: 같은 캔들·같은 방향 청산 합계 ≥ LIQ_MIN_USD(모든 거래소 합산) + 롱=음봉 마감 / 숏=양봉 마감
+   1차 진입  : 공통 + 볼린저밴드 터치 (롱=저가 ≤ 하단 / 숏=고가 ≥ 상단)            → "롱 1차" / "숏 1차"
+   2차+ 진입 : 공통 + 마감 시점 RSI14 (롱 ≤ 30 / 숏 ≥ 70)                          → "롱 2차+" / "숏 2차+"
+   (2차+ 의 '평단보다 0.5% 이상 불리' 조건은 보유 포지션에 따라 달라 차트에서는 판단할 수 없어 표시하지 않음)
+   ※ 청산 데이터는 페이지를 연 뒤 실시간으로 받은 것만 있어서, 그 이전 캔들에는 신호가 표시되지 않음 */
 (() => {
-const CFG={rsiLen:15,maLen:15,os:30,ob:70,look:10,ticks:1};   // lever.env 의 RSI_LENGTH / RSI_MA_LENGTH / RSI_OVERSOLD / RSI_OVERBOUGHT / LOOKBACK_CANDLES / ENTRY_TICKS
+const CFG={liqMin:5000,bbLen:20,bbMult:2,rsiLen:14,os:30,ob:70};   // lever.env 의 LIQ_MIN_USD(ZEC) / BB_LENGTH / BB_MULT / RSI_PERIOD / RSI_LONG_MAX / RSI_SHORT_MIN
 const rv=(g,l)=>l===0?100:g===0?0:100-100/(1+g/l);
-function rsiSeries(cl,len){
+function rsiSeries(cl,len){      // Wilder RMA (TradingView ta.rsi 와 동일)
   const out=new Array(cl.length).fill(null); if(cl.length<len+1) return out;
   let g=0,l=0; for(let i=1;i<=len;i++){ const df=cl[i]-cl[i-1]; if(df>0) g+=df; else l-=df; }
   let ag=g/len,al=l/len; out[len]=rv(ag,al);
   for(let i=len+1;i<cl.length;i++){ const df=cl[i]-cl[i-1]; ag=(ag*(len-1)+(df>0?df:0))/len; al=(al*(len-1)+(df<0?-df:0))/len; out[i]=rv(ag,al); }
   return out;
 }
-function smaSeries(v,len){
-  const out=new Array(v.length).fill(null);
-  for(let i=len-1;i<v.length;i++){ let s=0,ok=true; for(let k=i-len+1;k<=i;k++){ if(v[k]==null){ok=false;break;} s+=v[k]; } if(ok) out[i]=s/len; }
-  return out;
+function bbAt(cl,i,len,mult){    // 종가 기준 볼린저밴드 (SMA ± mult × 모집단 표준편차, TradingView ta.bb 와 동일)
+  if(i<len-1) return null;
+  let m=0; for(let k=i-len+1;k<=i;k++) m+=cl[k]; m/=len;
+  let v=0; for(let k=i-len+1;k<=i;k++) v+=(cl[k]-m)*(cl[k]-m);
+  const sd=Math.sqrt(v/len); return {lo:m-mult*sd,up:m+mult*sd};
+}
+function liqSums(){              // 캔들(차트 시간 기준)·방향별 청산 합계
+  const step=TF_SEC[state.tf],L=new Map(),S=new Map();
+  for (const l of state.symLiqs){
+    const bt=Math.floor(l.t/1000/step)*step+KST, m=l.longLiq?L:S;
+    m.set(bt,(m.get(bt)||0)+l.usd);
+  }
+  return {L,S};
 }
 function signals(rows){
-  const n=rows.length,rs=rsiSeries(rows.map(r=>r.close),CFG.rsiLen),ma=smaSeries(rs,CFG.maLen),out=[];
-  const tick=Math.pow(10,-decimalsFor(rows[n-1].close));
-  for (const d of [1,-1]){
-    let armed=false;
-    for (let i=0;i<n;i++){
-      const r=rs[i],m=ma[i]; let sig=false;
-      if (armed&&i>0&&r!=null&&m!=null&&rs[i-1]!=null&&ma[i-1]!=null){
-        const pr=rs[i-1],pm=ma[i-1],x=d>0?(pr<=pm&&r>m):(pr>=pm&&r<m);
-        if (x){ sig=true; armed=false; } }
-      if (r!=null&&(d>0?r<=CFG.os:r>=CFG.ob)&&!armed) armed=true;
-      if (sig){
-        const key=d>0?'low':'high'; let best=-1;
-        for (let k=Math.max(0,i-CFG.look);k<i;k++) if (best<0||d*(rows[k][key]-rows[best][key])<=0) best=k;
-        if (best>=0){ const px=rows[best][key]-d*tick*CFG.ticks;
-          if (d>0?px<rows[i].close:px>rows[i].close) out.push({time:rows[i].time,d}); }   // 지정가가 종가와 같거나 불리하면 바로 체결 → 신호 제외
-      } } }
+  const n=rows.length,cl=rows.map(r=>r.close),rs=rsiSeries(cl,CFG.rsiLen),{L,S}=liqSums(),out=[];
+  for (let i=0;i<n;i++){
+    const r=rows[i];
+    for (const d of [1,-1]){
+      if (((d>0?L:S).get(r.time)||0)<CFG.liqMin) continue;      // 청산 합계
+      if (d>0?!(r.close<r.open):!(r.close>r.open)) continue;                         // 롱=음봉 / 숏=양봉
+      const bb=bbAt(cl,i,CFG.bbLen,CFG.bbMult);
+      const first=!!bb&&(d>0?r.low<=bb.lo:r.high>=bb.up);                            // 1차: 볼밴 터치
+      const add=rs[i]!=null&&(d>0?rs[i]<=CFG.os:rs[i]>=CFG.ob);                      // 2차+: RSI
+      if (first||add) out.push({time:r.time,d,first,add});
+    }
+  }
   return out.sort((a,b)=>a.time-b.time);
+}
+function label(s){
+  const w=s.d>0?'롱':'숏';
+  return s.first&&s.add ? w+' 1차/2차+' : s.first ? w+' 1차' : w+' 2차+';
 }
 let key='';
 function update(){
   const d=candle.data(),n=d.length; if(n<CFG.rsiLen+3) return;
-  const on=$('chkSig').checked,k=[on,state.sym,state.tf,n,d[0].time,d[n-1].time].join('|'); if(k===key) return; key=k;
+  const on=$('chkSig').checked,k=[on,state.sym,state.tf,n,d[0].time,d[n-1].time,state.symLiqs.length].join('|'); if(k===key) return; key=k;
   if (!on){ candle.setMarkers([]); return; }
   candle.setMarkers(signals(d.slice(0,n-1)).map(s=>s.d>0   // 마감된 캔들만 (마지막 진행 중 캔들 제외)
-    ?{time:s.time,position:'belowBar',color:'#16c79a',shape:'arrowUp',text:'롱'}
-    :{time:s.time,position:'aboveBar',color:'#f0476a',shape:'arrowDown',text:'숏'}));
+    ?{time:s.time,position:'belowBar',color:'#16c79a',shape:'arrowUp',text:label(s)}
+    :{time:s.time,position:'aboveBar',color:'#f0476a',shape:'arrowDown',text:label(s)}));
 }
 setInterval(update,1500);
 })();
@@ -1853,13 +1871,18 @@ async function loadSymList(){
   }catch(e){ console.warn('종목 목록 로딩 실패 — 기본 목록 사용', e); }
 }
 updateSymHead(); loadSymList();
+function applyDefaultThr(){      // BTC 는 고래 $50K / 청산 $20K, 그 외 코인은 고래 $10K / 청산 $1K 를 기본 선택
+  const btc = state.sym === 'BTCUSDT';
+  state.thr = btc ? 50000 : 10000; state.liqThr = btc ? 20000 : 1000;
+  $('thrSel').value = String(state.thr); $('liqSel').value = String(state.liqThr);
+}
 function resetSymbolState(){
-  updateSymHead();
-  state.whales = []; state.symLiqs = []; state.hover = null;
+  updateSymHead(); applyDefaultThr();
+  state.whales = []; state.liqs = []; state.symLiqs = []; state.hover = null;
   state.stats = {buy:0,sell:0,ll:0,ls:0,since:Date.now()};
   $('price').textContent='-'; $('chg').textContent='-';
   clearLines();
-  renderWhales(); renderFoot();
+  renderWhales(); renderLiqs(); renderFoot();
 }
 async function start(){
   try{
