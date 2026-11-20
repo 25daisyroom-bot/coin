@@ -825,7 +825,10 @@ function addLiq(item){       // 모든 거래소 공통: item = {t, s(예 BTCUSD
   if (item.s !== state.sym) return;      // 지금 보고 있는 코인의 청산만 표시·집계 (목록·사운드·하단 누적·차트 마커 모두)
   const usd = item.usd;
   if (item.longLiq) state.stats.ll += usd; else state.stats.ls += usd;
-  if (usd >= state.liqThr){
+  const age = Date.now() - item.t;
+  const stale = age > 60000;      // 거래소가 한참 지난 청산을 뒤늦게 보내는 경우(1시간·7시간 전 등)는 실시간 목록·사운드에서 제외 (집계·차트는 원래 시각 캔들에 그대로 반영)
+  if (stale) console.warn('[청산] 오래된 데이터 수신', item.ex, item.s, Math.round(age/1000)+'초 전', new Date(item.t).toLocaleString('ko-KR'), item);
+  if (usd >= state.liqThr && !stale){
     state.liqs.push(item);
     if (state.liqs.length > 200) state.liqs.shift();
     playLiq(item);
@@ -1020,7 +1023,14 @@ function renderFoot(){
   $('fSince').textContent = hhmmss(s.since);
 }
 
+/* ---------- 청산 합계 기준 (차트 마커·진입 신호 공통) ---------- */
+const LIQ_MIN_DEFAULT = 5000;                 // lever.env 의 LIQ_MIN_USD
+const SYMBOL_LIQ_MIN = {BTCUSDT:20000};       // lever.env 의 SYMBOL_LIQ_MIN_USD 와 같게 맞출 것 (없는 종목은 LIQ_MIN_DEFAULT)
+const liqMinFor = sym => SYMBOL_LIQ_MIN[sym] ?? LIQ_MIN_DEFAULT;
+
 /* ---------- 버블 오버레이 ---------- */
+let _bubKey = '', _lowMap = new Map(), _highMap = new Map();     // 캔들 저가/고가 맵 캐시 (매 프레임 전체 캔들을 다시 훑지 않도록)
+let _grpKey = '', _grpCache = [];                                  // 청산 마커 합산 캐시
 function drawBubbles(){
   const cv = $('bubbles'), ctx = cv.getContext('2d'), dpr = window.devicePixelRatio||1;
   ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -1032,17 +1042,26 @@ function drawBubbles(){
 
   if ($('chkLiq').checked){
     // 롱 청산 마커는 '해당 캔들 저가 아래', 숏 청산 마커는 '해당 캔들 고가 위'에 표시 (청산 가격이 캔들 범위 밖이어도 거래량 영역으로 내려가지 않음)
-    const lowMap = new Map(), highMap = new Map();
-    for (const c of candle.data()){ lowMap.set(c.time, c.low); highMap.set(c.time, c.high); }
-    const groups = new Map();      // 같은 캔들·같은 방향의 청산은 한 마커로 합산
-    for (const l of state.symLiqs){
-      const bt = Math.floor(l.t/1000/step)*step + KST;
-      if (!lowMap.has(bt)) continue;
-      const key = bt+'|'+(l.longLiq?1:0);
-      const g = groups.get(key) || {bt, usd:0, longLiq:l.longLiq};
-      g.usd += l.usd; groups.set(key, g);
+    const data = candle.data(), lowMap = _lowMap, highMap = _highMap;
+    const bk = state.sym+'|'+state.tf+'|'+data.length+'|'+(data.length ? data[0].time : 0);
+    if (bk !== _bubKey){ _bubKey = bk; lowMap.clear(); highMap.clear(); for (const c of data){ lowMap.set(c.time, c.low); highMap.set(c.time, c.high); } }
+    if (data.length){ const lc = data[data.length-1]; lowMap.set(lc.time, lc.low); highMap.set(lc.time, lc.high); }   // 진행 중인 마지막 캔들만 매번 갱신
+    const sl = state.symLiqs, last = sl.length ? sl[sl.length-1] : null;
+    const gk = bk+'|'+sl.length+'|'+(last ? last.t+'|'+last.usd : '');
+    if (gk !== _grpKey){
+      _grpKey = gk;
+      const groups = new Map();      // 같은 캔들·같은 방향의 청산은 한 마커로 합산
+      for (const l of sl){
+        const bt = Math.floor(l.t/1000/step)*step + KST;
+        if (!lowMap.has(bt)) continue;
+        const key = bt+'|'+(l.longLiq?1:0);
+        const g = groups.get(key) || {bt, usd:0, longLiq:l.longLiq};
+        g.usd += l.usd; groups.set(key, g);
+      }
+      _grpCache = [...groups.values()];
     }
-    for (const g of groups.values()){
+    for (const g of _grpCache){
+      if (g.usd < liqMinFor(state.sym)) continue;      // 봇 신호 기준(LIQ_MIN_USD)과 같게: 캔들·방향별 합계가 기준 미만이면 마커를 그리지 않음
       const x = ts.timeToCoordinate(g.bt);
       const yEdge = candle.priceToCoordinate(g.longLiq ? lowMap.get(g.bt) : highMap.get(g.bt));
       if (x==null || yEdge==null || x<0 || x>W) continue;
@@ -1753,7 +1772,7 @@ load(D.sym); buildBar(); applyCursor(); size(); draw();
    (2차+ 의 '평단보다 0.5% 이상 불리' 조건은 보유 포지션에 따라 달라 차트에서는 판단할 수 없어 표시하지 않음)
    ※ 청산 데이터는 페이지를 연 뒤 실시간으로 받은 것만 있어서, 그 이전 캔들에는 신호가 표시되지 않음 */
 (() => {
-const CFG={liqMin:5000,bbLen:20,bbMult:2,rsiLen:14,os:30,ob:70};   // lever.env 의 LIQ_MIN_USD(ZEC) / BB_LENGTH / BB_MULT / RSI_PERIOD / RSI_LONG_MAX / RSI_SHORT_MIN
+const CFG={liqMin:LIQ_MIN_DEFAULT,bbLen:20,bbMult:2,rsiLen:14,os:30,ob:70};   // lever.env 의 LIQ_MIN_USD(ZEC) / BB_LENGTH / BB_MULT / RSI_PERIOD / RSI_LONG_MAX / RSI_SHORT_MIN
 const rv=(g,l)=>l===0?100:g===0?0:100-100/(1+g/l);
 function rsiSeries(cl,len){      // Wilder RMA (TradingView ta.rsi 와 동일)
   const out=new Array(cl.length).fill(null); if(cl.length<len+1) return out;
@@ -1781,7 +1800,7 @@ function signals(rows){
   for (let i=0;i<n;i++){
     const r=rows[i];
     for (const d of [1,-1]){
-      if (((d>0?L:S).get(r.time)||0)<CFG.liqMin) continue;      // 청산 합계
+      if (((d>0?L:S).get(r.time)||0)<liqMinFor(state.sym)) continue;      // 청산 합계
       if (d>0?!(r.close<r.open):!(r.close>r.open)) continue;                         // 롱=음봉 / 숏=양봉
       const bb=bbAt(cl,i,CFG.bbLen,CFG.bbMult);
       const first=!!bb&&(d>0?r.low<=bb.lo:r.high>=bb.up);                            // 1차: 볼밴 터치
