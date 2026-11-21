@@ -3283,7 +3283,7 @@ pfeedSync();
   const galab = document.createElement('div'); galab.className = 'ga'; lay.appendChild(galab);
 
   const ALIGN = ['left', 'center', 'right'];
-  let align = 'left'; try{ const a = localStorage.getItem('qd_ptalign'); if (ALIGN.includes(a)) align = a; }catch{}
+  let align = 'center'; try{ const a = localStorage.getItem('qd_ptalign'); if (ALIGN.includes(a)) align = a; }catch{}
   const els = new Map(), cur = new Map();
   let drag = null, geo = {aw: 0, ah: 0, pw: 92};
   const sgn = v => (v >= 0 ? '+' : '') + v.toFixed(2);
