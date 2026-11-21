@@ -83,6 +83,7 @@
   .toolbar .sp{flex:1}
   #chartWrap{position:relative;flex:1;min-height:120px;background:#0b0e14}
   #chart{position:absolute;inset:0;z-index:1}
+  #gridCv{position:absolute;inset:0;pointer-events:none;z-index:0}   /* 그리드: 맨 뒤 레이어 (버블·플래시·차트보다 아래) */
   #bubbles{position:absolute;inset:0;pointer-events:none;z-index:0}
   #flashLayer{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
   #cdBox{position:absolute;left:0;z-index:3;pointer-events:none;display:none;box-sizing:border-box;text-align:center;color:#fff;font:12px ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden}
@@ -133,6 +134,12 @@
   #chartRow #chartWrap{min-width:0}
   #dtools{width:52px;flex:none;display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:2px;background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;scrollbar-width:none;user-select:none}
   #dtools::-webkit-scrollbar{display:none}
+  /* 도구모음 숨김/보이기 버튼 */
+  #dtEdge{flex:none;width:14px;display:flex;align-items:center;justify-content:center;background:var(--panel);border-right:1px solid var(--line)}
+  #dtToggle{width:14px;height:44px;padding:0;border:none;border-radius:0 6px 6px 0;background:#1e222d;color:#9598a1;font-size:10px;line-height:1;cursor:pointer}
+  #dtToggle:hover{background:#363a45;color:#fff}
+  #chartRow.dtHidden #dtools{display:none}
+  #chartRow.dtHidden #dtEdge{border-right:0}
   /* 차트 오른쪽 접이식 옵션 패널 */
   #optSide{flex:none;display:flex;flex-direction:column;align-items:flex-end;background:var(--panel);border-left:1px solid var(--line);user-select:none}
   #optToggle,#fsBtn{width:28px;height:28px;margin:6px 0 0;padding:0;border:none;background:none;color:#d1d4dc;font-size:16px;line-height:1;border-radius:6px}
@@ -484,8 +491,10 @@
     </div>
     <div id="chartRow">
       <div id="dtools"></div>
+      <div id="dtEdge"><button id="dtToggle" type="button" title="도구모음 숨기기/보이기">◀</button></div>
       <div id="chartWrap">
         <div class="legend num" id="legend"></div>
+        <canvas id="gridCv"></canvas>
         <div id="chart"></div>
         <div id="flashLayer"></div>
         <canvas id="bubbles"></canvas>
@@ -1211,10 +1220,45 @@ const volume = chart.addHistogramSeries({
 });
 chart.priceScale('vol').applyOptions({scaleMargins:{top:0.82,bottom:0}});
 
+/* ---------- 그리드: 맨 뒤 레이어 ----------
+   차트 내장 그리드는 차트 캔버스(z1) 안에 있어 버블·청산 플래시(z0) 위에 그려지므로,
+   내장 그리드를 끄고 같은 눈금 좌표로 #gridCv(z0, 가장 먼저 그려짐)에 직접 그린다. */
+const GRID_COLOR = '#141a24';
+function gridTicks(){
+  try{
+    const m = chart.lw.$t(), pane = m.Uc()[0];
+    const ys = pane.vn().ja().map(t=>t.Ia);          // 가격축 눈금 y좌표 (내장 그리드와 동일)
+    const xs = (m.St().ja()||[]).map(t=>t.coord);    // 시간축 눈금 x좌표
+    return {xs, ys};
+  }catch(e){ return null; }
+}
+let _gridOK = (()=>{ const t = gridTicks(); return !!(t && Array.isArray(t.ys)); })();
+if (_gridOK) chart.applyOptions({grid:{vertLines:{visible:false},horzLines:{visible:false}}});
+let _gridSig = '';
+function drawGrid(force){
+  if (!_gridOK) return;
+  const cv = $('gridCv'), t = gridTicks(); if (!t) return;
+  const sig = t.xs.map(Math.round).join(',')+'|'+t.ys.map(Math.round).join(',')+'|'+cv.width+'x'+cv.height;
+  if (!force && sig === _gridSig) return;
+  _gridSig = sig;
+  const dpr = window.devicePixelRatio||1, W = cv.width/dpr, H = cv.height/dpr;
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  const pw = chart.timeScale().width(), ph = chart.paneSize().height;     // 축 영역엔 그리지 않음
+  ctx.save(); ctx.beginPath(); ctx.rect(0,0,pw,ph); ctx.clip();
+  ctx.strokeStyle = GRID_COLOR; ctx.lineWidth = 1; ctx.beginPath();
+  for (const x of t.xs){ const px = Math.round(x*dpr)/dpr + .5/dpr; ctx.moveTo(px,0); ctx.lineTo(px,ph); }
+  for (const y of t.ys){ const py = Math.round(y*dpr)/dpr + .5/dpr; ctx.moveTo(0,py); ctx.lineTo(pw,py); }
+  ctx.stroke(); ctx.restore();
+}
+(function loopG(){ drawGrid(false); requestAnimationFrame(loopG); })();   // 줌·스크롤·가격축 자동조절 때마다 즉시 반영
+
 function resize(){
   const r = $('chartWrap').getBoundingClientRect();
   if (r.width < 10 || r.height < 10) return;
   chart.resize(r.width, r.height);
+  { const g = $('gridCv'), d = window.devicePixelRatio||1;
+    g.width = r.width*d; g.height = r.height*d; g.style.width = r.width+'px'; g.style.height = r.height+'px'; drawGrid(true); }
   const cv = $('bubbles'), dpr = window.devicePixelRatio||1;
   cv.width = r.width*dpr; cv.height = r.height*dpr;
   cv.style.width = r.width+'px'; cv.style.height = r.height+'px';
@@ -2058,6 +2102,19 @@ $('pbody').addEventListener('click', e => {        // 행을 누르면 그 심�
   if (b){ pbHold = false; if (typeof paperAct === 'function') paperAct(b.dataset.act, b.dataset.sym, b.dataset.id); return; }
   const tr = e.target.closest('tr[data-sym]'); if (tr) switchSymbol(tr.dataset.sym);
 });
+
+/* ---------- 도구모음 숨기기/보이기 ---------- */
+(() => {
+  const row = $('chartRow'), btn = $('dtToggle');
+  const paint = hide => { row.classList.toggle('dtHidden', hide); btn.textContent = hide ? '▶' : '◀'; btn.title = hide ? '도구모음 보이기' : '도구모음 숨기기'; };
+  let hide = false; try{ hide = localStorage.getItem('qd_dtHidden') === '1'; }catch{}
+  paint(hide);
+  btn.onclick = () => {
+    hide = !row.classList.contains('dtHidden'); paint(hide);
+    try{ localStorage.setItem('qd_dtHidden', hide ? '1' : '0'); }catch{}
+    window.dispatchEvent(new Event('resize'));
+  };
+})();
 
 /* ============================================================
    TradingView 스타일 그리기 도구모음 (왼쪽) + 우하단 시계
