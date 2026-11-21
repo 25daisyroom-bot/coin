@@ -184,7 +184,7 @@
      모바일 / 태블릿 대응 (가로·세로 자동 맞춤, 분할선 길게 눌러 조절, 전체화면)
      ============================================================ */
   html,body{overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
-  #app{height:100vh;height:100dvh;height:var(--appH,100dvh);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+  #app{height:100vh;height:100dvh;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
   select,button{touch-action:manipulation}
   #chartRow,#chartWrap{min-height:80px}
   #posPanel{min-height:64px}
@@ -216,6 +216,8 @@
 
   /* 폰·태블릿 세로/가로 공통 */
   @media (max-width:900px),(max-height:500px){
+    /* 폰: 실제 보이는 화면에 딱 맞게 고정 (100vh/100dvh 가 주소창·전체화면 때 어긋나 아래쪽이 잘리거나 비는 문제 방지) */
+    #app{position:fixed;left:0;top:0;right:0;bottom:0;width:auto;height:auto}
     #app{grid-template-columns:1fr}
     aside{display:none}
     header{grid-column:1;flex-wrap:nowrap;gap:12px;padding:6px 10px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch}
@@ -2906,7 +2908,6 @@ $('chkVol').onchange = e => volume.applyOptions({visible:e.target.checked});
     const m=document.querySelector('main'), pn=$('posPanel');
     m.classList.remove('fullChart','fullPanel');
     const fix=()=>{
-      window.__setAppH&&window.__setAppH();
       const mh=m.clientHeight; if (mh>0 && pn.offsetHeight>mh*.5) pn.style.height=Math.round(Math.max(90,mh*.35))+'px';
       window.dispatchEvent(new Event('resize'));
     };
