@@ -42,6 +42,10 @@
   .symRow .dim{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   select,button{background:#171c27;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font:inherit;cursor:pointer}
   button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  /* 타임프레임 버튼: EMA 25/50/100/200 정배열=초록, 역배열=빨강 (선택된 버튼은 흰 테두리로 표시) */
+  #tfBar button.bull{background:var(--up);border-color:var(--up);color:#fff}
+  #tfBar button.bear{background:var(--dn);border-color:var(--dn);color:#fff}
+  #tfBar button.bull.on,#tfBar button.bear.on{box-shadow:inset 0 0 0 2px #fff}
   .price{font-size:20px;font-weight:700}
   .stat{display:flex;flex-direction:column}
   .stat .k{color:var(--dim);font-size:10px}
@@ -67,6 +71,7 @@
   #chart{position:absolute;inset:0;z-index:1}
   #bubbles{position:absolute;inset:0;pointer-events:none;z-index:0}
   #flashLayer{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+  #cdBox{position:absolute;left:0;z-index:3;pointer-events:none;display:none;box-sizing:border-box;text-align:center;color:#fff;font:12px ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden}
   #flashLayer i{position:absolute;left:0;right:0;height:50%;opacity:0;will-change:opacity}
   .legend{position:absolute;left:10px;top:6px;z-index:6;color:var(--dim);font-size:11px;pointer-events:none}
   .legend b{color:var(--txt);font-weight:600}
@@ -1930,6 +1935,86 @@ $('tfBar').addEventListener('click', e => {
   document.querySelectorAll('#tfBar button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on'); state.tf = b.dataset.tf; state.hover = null; start();
 });
+
+/* ---------- 타임프레임 버튼 색: EMA 정배열(초록) / 역배열(빨강) — 선은 그리지 않고 계산만 함 ---------- */
+(function(){
+  const PERIODS=[25,50,100,200];
+  const emaLast=(closes,n)=>{ const a=2/(n+1); let e=closes[0]; for(let i=1;i<closes.length;i++) e=closes[i]*a+e*(1-a); return e; };
+  let lastSym=null, busy=false;
+  async function calcTf(sym,tf){
+    const k=await jget(`${REST}/fapi/v1/klines?symbol=${sym}&interval=${tf}&limit=1000`);
+    const c=k.map(x=>+x[4]);
+    if(c.length<PERIODS[3]) return null;                 // 상장 직후 등 데이터 부족하면 판정 안 함
+    const [e25,e50,e100,e200]=PERIODS.map(n=>emaLast(c,n));
+    if(e25>e50 && e50>e100 && e100>e200) return 'bull';
+    if(e25<e50 && e50<e100 && e100<e200) return 'bear';
+    return null;                                          // 섞여 있으면 기본색
+  }
+  async function refreshTrend(){
+    if(busy) return; busy=true;
+    const sym=state.sym; lastSym=sym;
+    const btns=[...document.querySelectorAll('#tfBar button[data-tf]')];
+    await Promise.all(btns.map(async b=>{
+      let r=null; try{ r=await calcTf(sym,b.dataset.tf); }catch(e){ return; }   // 실패하면 이전 색 유지
+      if(sym!==state.sym) return;
+      b.classList.toggle('bull',r==='bull'); b.classList.toggle('bear',r==='bear');
+    }));
+    busy=false;
+  }
+  refreshTrend();
+  setInterval(()=>{ if(state.sym!==lastSym) refreshTrend(); },1000);   // 종목이 바뀌면 즉시 다시 계산
+  setInterval(refreshTrend,30000);                                     // 30초마다 갱신
+})();
+
+/* ---------- 현재가 라벨 바로 아래에 봉 마감 카운트다운 (TradingView 방식) ---------- */
+(function(){
+  const box=document.createElement('div'); box.id='cdBox'; $('chartWrap').appendChild(box);
+  const SEC={'1m':60,'3m':180,'5m':300,'15m':900,'30m':1800,'1h':3600,'4h':14400,'1d':86400};
+  const pad=n=>String(n).padStart(2,'0');
+  let lastTxt='', lastBg='', geo=null, geoAt=0, geoKey='';
+  /* 가격축 캔버스에서 현재가 라벨(색 칠해진 사각형)의 실제 위치·크기를 픽셀로 읽어서 박스를 정확히 맞춘다 */
+  function measureLabel(y,rgb){
+    try{
+      const td=document.querySelectorAll('#chart td')[2]; if(!td) return null;
+      const cv=td.querySelector('canvas'); if(!cv) return null;
+      const cr=cv.getBoundingClientRect(), wr=$('chartWrap').getBoundingClientRect();
+      const k=cv.width/cr.width; if(!k||!isFinite(k)) return null;
+      const y0=Math.max(0,Math.floor((y-16)*k)), h=Math.min(cv.height-y0,Math.ceil(32*k)); if(h<=0) return null;
+      const d=cv.getContext('2d').getImageData(0,y0,cv.width,h).data, W=cv.width;
+      const hit=(i)=>Math.abs(d[i]-rgb[0])<8&&Math.abs(d[i+1]-rgb[1])<8&&Math.abs(d[i+2]-rgb[2])<8&&d[i+3]>200;
+      const cnt=[]; let best=-1,bc=0;
+      for(let r=0;r<h;r++){ let c=0; for(let x=0;x<W;x++) if(hit((r*W+x)*4)) c++; cnt.push(c); if(c>bc){bc=c;best=r;} }
+      if(bc<10) return null;
+      let minx=W,maxx=-1; for(let x=0;x<W;x++) if(hit((best*W+x)*4)){ if(x<minx)minx=x; if(x>maxx)maxx=x; }
+      let top=best,bot=best; const th=bc*0.3;
+      while(top>0&&cnt[top-1]>=th) top--; while(bot<h-1&&cnt[bot+1]>=th) bot++;
+      return {left:cr.left-wr.left+minx/k, width:(maxx-minx+1)/k, bottom:cr.top-wr.top+(y0+bot+1)/k, height:(bot-top+1)/k};
+    }catch(e){ return null; }
+  }
+  function tick(){
+    requestAnimationFrame(tick);
+    const lc=state.lastCandle, sec=SEC[state.tf];
+    if(!lc||!sec){ box.style.display='none'; return; }
+    const y=candle.priceToCoordinate(lc.close);
+    const wrapH=$('chartWrap').clientHeight;
+    if(y==null||y<0||y>wrapH-40){ box.style.display='none'; return; }       // 현재가가 화면 밖이면 숨김
+    const rem=Math.max(0,Math.min(sec,Math.ceil(lc.time-KST+sec-Date.now()/1000)));   // 차트 시간의 KST 오프셋을 빼서 실제 시각으로 계산, 올림이라 봉 시작 시 60 / 3:00 부터
+    const h=Math.floor(rem/3600), m=Math.floor(rem%3600/60), ss=rem%60;
+    const txt=sec===60?`${pad(m)}:${pad(ss)}`:(h>0?`${h}:${pad(m)}:${pad(ss)}`:`${m}:${pad(ss)}`);   // 1분봉=01:00 00:59…, 그 외=분:초(1시간 이상은 시:분:초)
+    const up=lc.close>=lc.open, bg=up?'#16c79a':'#f0476a', rgb=up?[22,199,154]:[240,71,106];
+    const now=performance.now(), key=bg+'|'+state.tf+'|'+chart.priceScale('right').width();
+    if(key!==geoKey || now-geoAt>500){ const g=measureLabel(y,rgb); if(g) geo=g; geoAt=now; geoKey=key; }
+    const g=geo||{left:chart.timeScale().width(),width:chart.priceScale('right').width(),bottom:y+10,height:20};
+    // 측정값은 위치 갱신이 늦을 수 있으므로 세로 위치는 매 프레임 현재가 y 기준(라벨 높이의 절반 아래)으로 계산
+    const top=y+g.height/2;
+    if(txt!==lastTxt){ box.textContent=txt; lastTxt=txt; }
+    box.style.top=top+'px'; box.style.left=g.left+'px'; box.style.width=g.width+'px';
+    box.style.height=g.height+'px'; box.style.lineHeight=g.height+'px';
+    if(bg!==lastBg){ box.style.background=bg; lastBg=bg; }
+    box.style.display='block';
+  }
+  tick();
+})();
 $('chkVol').onchange = e => volume.applyOptions({visible:e.target.checked});
 ['chkLiq','chkHL'].forEach(id => $(id).onchange = drawBubbles);
 (function(){      // 차트 오른쪽 옵션 패널 열기/닫기 (상태 기억)
