@@ -184,7 +184,7 @@
      모바일 / 태블릿 대응 (가로·세로 자동 맞춤, 분할선 길게 눌러 조절, 전체화면)
      ============================================================ */
   html,body{overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
-  #app{height:100vh;height:100dvh;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+  #app{height:100vh;height:100dvh;height:var(--appH,100dvh);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
   select,button{touch-action:manipulation}
   #chartRow,#chartWrap{min-height:80px}
   #posPanel{min-height:64px}
@@ -2882,6 +2882,14 @@ $('chkVol').onchange = e => volume.applyOptions({visible:e.target.checked});
   let v='0'; try{ v=localStorage.getItem('optOpen')||'0'; }catch{}
   set(v==='1');
 })();
+(function(){      // 실제 보이는 화면 높이를 --appH 로 유지 (폰 전체화면/주소창/회전 때 100dvh 가 늦게 바뀌어 아래가 비는 문제 방지)
+  const set=()=>{ const vv=window.visualViewport, h=Math.round(Math.max(vv?vv.height:0, window.innerHeight||0) || window.innerHeight);
+    if (h>0) document.documentElement.style.setProperty('--appH',h+'px'); };
+  window.__setAppH=set; set();
+  window.addEventListener('resize',set); window.addEventListener('orientationchange',()=>[100,400,900].forEach(t=>setTimeout(set,t)));
+  if (window.visualViewport) window.visualViewport.addEventListener('resize',set);
+  ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>[60,300,900].forEach(t=>setTimeout(set,t))));
+})();
 (function(){      // 전체화면 모드 (종료는 버튼 또는 Esc / 폰에서는 상단 시세·하단 요약을 접어 차트와 포지션을 크게)
   const btn=$('fsBtn'), el=document.documentElement;
   const rq=el.requestFullscreen||el.webkitRequestFullscreen;
@@ -2891,7 +2899,19 @@ $('chkVol').onchange = e => volume.applyOptions({visible:e.target.checked});
   const isFs=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
   let pseudo=false;                                   // iPhone Safari 등 Fullscreen API가 없는 기기용 대체 전체화면
   const upd=()=>{ const on=isFs()||pseudo; btn.innerHTML=on?EXIT:ENTER; btn.title=on?'전체화면 종료':'전체화면'; };
-  const setPseudo=on=>{ pseudo=on; document.body.classList.toggle('pfs',on); upd(); setTimeout(()=>window.dispatchEvent(new Event('resize')),60); };   // 레이아웃이 바뀌므로 차트·분리선 높이 재계산
+  const setPseudo=on=>{ pseudo=on; document.body.classList.toggle('pfs',on); upd(); relayout(); };
+  /* 전체화면 전환 직후: 실제 보이는 높이로 앱 높이를 다시 맞추고, 포지션 패널이 화면을 크게 차지하거나(전체/절반 이상)
+     '차트 전체·포지션 전체' 상태에 걸려 있으면 기본 비율로 되돌려 하단이 비거나 분리선이 위로 붙지 않게 함. 폰은 주소창/전체화면 반영이 늦어 여러 번 재계산 */
+  const relayout=()=>{
+    const m=document.querySelector('main'), pn=$('posPanel');
+    m.classList.remove('fullChart','fullPanel');
+    const fix=()=>{
+      window.__setAppH&&window.__setAppH();
+      const mh=m.clientHeight; if (mh>0 && pn.offsetHeight>mh*.5) pn.style.height=Math.round(Math.max(90,mh*.35))+'px';
+      window.dispatchEvent(new Event('resize'));
+    };
+    [60,300,800,1500].forEach(t=>setTimeout(fix,t));
+  };
   btn.onclick=()=>{
     if (isFs()||pseudo){ try{ if(isFs()) ex.call(document); }catch{} setPseudo(false); return; }
     setPseudo(true);
