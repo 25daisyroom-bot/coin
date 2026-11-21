@@ -262,7 +262,12 @@
   }
 
   /* 좁은 화면: 툴바의 "고래·청산" 버튼으로 왼쪽 목록을 차트 위에 겹쳐서 열기/닫기 */
-  #whaleBtn{display:none;flex:none}
+  #whaleBtn{display:inline-block;flex:none}
+  @media (min-width:901px) and (min-height:501px){      /* 넓은 화면: 왼쪽 패널을 접으면 차트가 전체 폭을 씀 */
+    body.asideOff #app{grid-template-columns:1fr}
+    body.asideOff aside{display:none}
+    body.asideOff header{grid-column:1}
+  }
   #whaleBtn.act{background:var(--accent);border-color:var(--accent);color:#fff}
   @media (max-width:900px),(max-height:500px){
     #whaleBtn{display:inline-block}
@@ -2835,14 +2840,19 @@ $('chkVol').onchange = e => volume.applyOptions({visible:e.target.checked});
   upd();
 })();
 
-(function(){      // 좁은 화면에서 고래 체결·청산 목록 열기/닫기
-  const btn=$('whaleBtn'), mq=matchMedia('(max-width:900px), (max-height:500px)');
-  const set=on=>{ if(on) document.documentElement.style.setProperty('--asideTop',Math.round($('tfBar').getBoundingClientRect().bottom)+'px');
-    document.body.classList.toggle('showAside',on); btn.classList.toggle('act',on); };
-  btn.onclick=e=>{ e.stopPropagation(); set(!document.body.classList.contains('showAside')); };
-  document.addEventListener('click',e=>{ if(document.body.classList.contains('showAside')&&!e.target.closest('aside')&&!e.target.closest('#whaleBtn')) set(false); });
-  const mqc=()=>{ if(!mq.matches) set(false); };
+(function(){      // 고래 체결·청산 목록 열기/닫기 (넓은 화면: 왼쪽 패널 접기/펴기 · 좁은 화면: 차트 위에 겹쳐서 열기)
+  const btn=$('whaleBtn'), mq=matchMedia('(max-width:900px), (max-height:500px)'), body=document.body;
+  let off=false; try{ off=localStorage.getItem('qd_asideOff')==='1'; }catch{}
+  body.classList.toggle('asideOff',off);
+  const paint=()=>btn.classList.toggle('act', mq.matches ? body.classList.contains('showAside') : !body.classList.contains('asideOff'));
+  const overlay=on=>{ if(on) document.documentElement.style.setProperty('--asideTop',Math.round($('tfBar').getBoundingClientRect().bottom)+'px');
+    body.classList.toggle('showAside',on); paint(); };
+  const wide=on=>{ body.classList.toggle('asideOff',!on); try{ localStorage.setItem('qd_asideOff',on?'0':'1'); }catch{} paint(); };
+  btn.onclick=e=>{ e.stopPropagation(); if(mq.matches) overlay(!body.classList.contains('showAside')); else wide(body.classList.contains('asideOff')); };
+  document.addEventListener('click',e=>{ if(mq.matches&&body.classList.contains('showAside')&&!e.target.closest('aside')&&!e.target.closest('#whaleBtn')) overlay(false); });
+  const mqc=()=>{ if(!mq.matches) overlay(false); paint(); };
   mq.addEventListener?mq.addEventListener('change',mqc):mq.addListener(mqc);
+  paint();
 })();
 
 setInterval(()=>{ $('clock').textContent = new Date().toLocaleTimeString('ko-KR',{hour12:false}); renderWhales(); renderLiqs(); }, 1000);
