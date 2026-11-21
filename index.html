@@ -207,7 +207,12 @@
   main.fullPanel #posPanel{flex:1 1 auto;height:auto!important}
 
   /* 전체화면 모드(작은 화면): 상단 시세 줄과 하단 요약을 접어서 차트·포지션이 화면을 다 씀 */
-  @media (max-width:900px),(max-height:500px){ body.pfs header,body.pfs #foot{display:none} }
+  @media (max-width:900px),(max-height:500px){
+    body.pfs header,body.pfs #foot{display:none}
+    /* 헤더를 숨기면 main 이 높이가 내용만큼인 첫 행(auto)으로 올라가 분리선이 위로 붙고 안 움직이던 문제 → 남은 행 전체를 main 이 차지 */
+    body.pfs #app{grid-template-rows:minmax(0,1fr)}
+    body.pfs main{grid-row:1;grid-column:1 / -1;height:100%}
+  }
 
   /* 폰·태블릿 세로/가로 공통 */
   @media (max-width:900px),(max-height:500px){
@@ -2886,7 +2891,7 @@ $('chkVol').onchange = e => volume.applyOptions({visible:e.target.checked});
   const isFs=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
   let pseudo=false;                                   // iPhone Safari 등 Fullscreen API가 없는 기기용 대체 전체화면
   const upd=()=>{ const on=isFs()||pseudo; btn.innerHTML=on?EXIT:ENTER; btn.title=on?'전체화면 종료':'전체화면'; };
-  const setPseudo=on=>{ pseudo=on; document.body.classList.toggle('pfs',on); upd(); };
+  const setPseudo=on=>{ pseudo=on; document.body.classList.toggle('pfs',on); upd(); setTimeout(()=>window.dispatchEvent(new Event('resize')),60); };   // 레이아웃이 바뀌므로 차트·분리선 높이 재계산
   btn.onclick=()=>{
     if (isFs()||pseudo){ try{ if(isFs()) ex.call(document); }catch{} setPseudo(false); return; }
     setPseudo(true);
