@@ -288,6 +288,13 @@
     body.showAside aside{display:flex;position:fixed;z-index:40;left:env(safe-area-inset-left,0px);top:var(--asideTop,90px);bottom:env(safe-area-inset-bottom,0px);width:min(300px,86vw);border:1px solid var(--line);border-left:0;box-shadow:8px 0 24px rgba(0,0,0,.5)}
   }
 
+
+  /* 크리스마스 모드 버튼 (인디케이터 버튼 오른쪽 · 켜면 인터페이스가 크리스마스 분위기, 끄면 원래 모습) */
+  #xmasBtn{display:inline-flex;align-items:center;justify-content:center;flex:none;padding:4px 7px;background:none;border-color:transparent;color:#9aa3b5}
+  #xmasBtn:hover{color:#fff;background:#232a38}
+  #xmasBtn svg{display:block}
+  #xmasBtn.act{color:#3ddc84;background:#16241e;box-shadow:inset 0 0 0 1px rgba(61,220,132,.35)}
+  #xmasBtn.act svg{fill:rgba(61,220,132,.22)}
   /* 인디케이터 도구 (시간봉 오른쪽 버튼 + 지표 목록 창 + 차트 위 지표 범례) */
   #indBtn{display:inline-flex;align-items:center;justify-content:center;flex:none;padding:4px 7px;background:none;border-color:transparent;color:#9aa3b5}
   #indBtn:hover,#indBtn.act{color:#fff;background:#232a38}
@@ -412,11 +419,53 @@
   #tradePanel .tpNote{color:var(--dim);font-size:10.5px;line-height:1.5}
   #tpToast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:200;max-width:min(520px,92vw);padding:10px 16px;border-radius:8px;background:#1a2030;border:1px solid var(--line);box-shadow:0 8px 28px rgba(0,0,0,.55);font-size:13px;line-height:1.45;opacity:0;pointer-events:none;transition:opacity .18s}
   #tpToast.on{opacity:1}
+  /* 차트 우클릭 메뉴 */
+  #chartCtx{position:fixed;z-index:150;display:none;min-width:190px;padding:4px;background:#1e222d;border:1px solid #363a45;border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.55);font-size:13px;user-select:none;-webkit-user-select:none}
+  #chartCtx.open{display:block}
+  #chartCtx .ch{padding:6px 10px 5px;color:#9598a1;font-size:11px;border-bottom:1px solid #2a2e39;margin-bottom:4px}
+  #chartCtx .ch b{color:#d1d4dc;font-size:13px;margin-left:4px}
+  #chartCtx button{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:0;border-radius:6px;background:transparent;color:#d1d4dc;font-size:13px;text-align:left;cursor:pointer}
+  #chartCtx button:hover{background:#2a2e39}
+  #chartCtx button:disabled{opacity:.4;cursor:default}
   #tpToast.ok{border-color:var(--up)} #tpToast.err{border-color:var(--dn)}
   .pbtn{padding:2px 9px;font-size:11px;margin-right:4px}
   @media (max-width:900px),(max-height:500px){
     #tradePanel{position:absolute;right:30px;top:0;bottom:0;z-index:31;width:min(268px,82vw);box-shadow:-8px 0 20px rgba(0,0,0,.35)}
   }
+
+  /* ===== 크리스마스 모드 (html.xmas) — 툴바 트리 버튼으로 켜고 끔. 끄면 아래 규칙이 전부 빠져 원래 화면 ===== */
+  html.xmas{--bg:#07120d;--panel:#0d1b14;--line:#23402f;--txt:#f4eee2;--dim:#9db8a7;--accent:#d8343f;--gold:#f2c14e}
+  html.xmas #app{padding-top:calc(env(safe-area-inset-top,0px) + 6px)}                /* 상단 전구줄 자리 */
+  html.xmas header{background:linear-gradient(180deg,#153324 0%,var(--panel) 100%);box-shadow:0 1px 0 rgba(242,193,78,.22)}
+  html.xmas #chartWrap{background:radial-gradient(120% 90% at 50% 0%,#12301f 0%,#0a1a11 55%,#07120d 100%)}
+  html.xmas .ptab.on{border-bottom-color:var(--gold)}
+  html.xmas .ptab .cnt{color:var(--gold)}
+  html.xmas #split.press{background:#7a2a33}
+  html.xmas .symInfo{background:var(--gold)}
+  /* 기본 버튼/셀렉트: 원래 규칙과 같은 우선순위로 덮어서 .on·.bull·.bear 등 개별 규칙은 그대로 이김 */
+  :where(html.xmas) select,:where(html.xmas) button{background:#15291e}
+  html.xmas button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  html.xmas #symBtn:hover,html.xmas #symBtn.open,html.xmas .symRow:hover,html.xmas .symRow.act,
+  html.xmas #indBtn:hover,html.xmas #indBtn.act,html.xmas #posTagBtn:hover,html.xmas #posTagBtn.act,html.xmas #xmasBtn:hover{background:#1b3326}
+  html.xmas #symQ,html.xmas #indQ,html.xmas .is input,html.xmas #tradePanel .tpAcct,html.xmas #tradePanel .tpInfo,html.xmas #tradePanel .tpTabs{background:#0a1711}
+  html.xmas #tradePanel .tpField,html.xmas #tpUnit option{background:#10231a}
+  html.xmas #indModal .im,html.xmas #posTagMenu,html.xmas #chartCtx,html.xmas .dfly,html.xmas #dstyle,html.xmas .dcar,html.xmas #dtToggle,
+  html.xmas #tpStepPop,html.xmas #tpToast{background:#12251a;border-color:#2d5640}
+  html.xmas .dbtn:hover,html.xmas .dbtn.sel,html.xmas .ii:hover,html.xmas #posTagMenu .mi:hover,html.xmas #chartCtx button:hover,
+  html.xmas .dfly .dfi:hover,html.xmas .dfly .dfi.cur,html.xmas #dstyle .dw.on,html.xmas #dstyle .dw:hover,html.xmas #dtToggle:hover,html.xmas .dcar:hover{background:#1f3a2b}
+  html.xmas table.bb tbody tr:hover td{background:#12251a}
+  html.xmas .badge,html.xmas #posLay .pt{background:#17301f}
+  html.xmas #posLay .pt button:hover{background:#244634}
+  /* 상단 전구줄 + 눈 (눈은 JS 가 #snowCv 를 만들어 띄움) */
+  #xmasLights,#snowCv{display:none}
+  html.xmas #xmasLights{display:block;position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);height:7px;z-index:80;pointer-events:none;
+    background:linear-gradient(#1c5a3a,#1c5a3a) 0 1px/100% 1.5px no-repeat}
+  #xmasLights::before,#xmasLights::after{content:"";position:absolute;inset:0;background-repeat:repeat-x;background-size:64px 7px}
+  #xmasLights::before{background-image:radial-gradient(circle at 8px 4px,#ff4d5e 0 2.3px,rgba(255,77,94,0) 3.6px),radial-gradient(circle at 40px 4px,#ffd166 0 2.3px,rgba(255,209,102,0) 3.6px);animation:xmTw 2s ease-in-out infinite}
+  #xmasLights::after{background-image:radial-gradient(circle at 24px 4px,#3ddc84 0 2.3px,rgba(61,220,132,0) 3.6px),radial-gradient(circle at 56px 4px,#7cc4ff 0 2.3px,rgba(124,196,255,0) 3.6px);animation:xmTw 2s ease-in-out 1s infinite}
+  @keyframes xmTw{0%,100%{opacity:1}50%{opacity:.3}}
+  @media (prefers-reduced-motion:reduce){#xmasLights::before,#xmasLights::after{animation:none}}
+  #snowCv{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:2}
 </style>
 </head>
 <body>
@@ -492,6 +541,7 @@
       <button data-tf="30m">30m</button><button data-tf="1h">1H</button>
       <button data-tf="4h">4H</button><button data-tf="1d">1D</button>
       <button id="indBtn" type="button" title="인디케이터"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v17h17"/><path d="M8 16l3-4 3 2 5-6"/></svg></button>
+      <button id="xmasBtn" type="button" title="크리스마스 분위기 켜기/끄기" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8l-3.4 5.2h2L7.2 12.6h2.4L5.6 18.4h12.8l-4-5.8h2.4L13.4 8h2z"/><path d="M12 18.4v3"/><circle cx="10.2" cy="14.8" r=".9" fill="currentColor" stroke="none"/><circle cx="13.9" cy="15.6" r=".9" fill="currentColor" stroke="none"/><circle cx="11.9" cy="10.6" r=".8" fill="currentColor" stroke="none"/></svg></button>
       <span class="sp"></span>
       <button id="tpBtn" type="button" title="모의거래 패널 열기/닫기">모의거래</button>
       <button id="whaleBtn" type="button" title="고래 체결 · 청산 목록 열기/닫기">고래·청산</button>
@@ -1616,9 +1666,11 @@ function flashWhale(w){
   if (w.usd < 1e6 || !$('chkFlash').checked || flashLive >= 6) return;
   const a = Math.min(0.42, 0.10 + 0.32*Math.log10(w.usd/1e6));      // 1M=0.10 → 10M 이상=0.42
   const el = document.createElement('i');
-  const col = w.buy ? '22,199,154' : '240,71,106';
-  if (w.buy){ el.style.bottom = '0'; el.style.background = `linear-gradient(to top, rgba(${col},${a}) 0%, rgba(${col},${a*0.4}) 45%, rgba(${col},0) 100%)`; }
-  else      { el.style.top = '0';    el.style.background = `linear-gradient(to bottom, rgba(${col},${a}) 0%, rgba(${col},${a*0.4}) 45%, rgba(${col},0) 100%)`; }
+  const xm = document.documentElement.classList.contains('xmas');      // 크리스마스 모드: 솔잎 초록 / 호랑가시 빨강 + 금빛 하이라이트
+  const col = w.buy ? (xm ? '46,213,115' : '22,199,154') : (xm ? '233,56,72' : '240,71,106');
+  const gold = xm ? `radial-gradient(ellipse 60% 55% at 50% ${w.buy ? '100%' : '0%'}, rgba(255,222,140,${a*0.55}) 0%, rgba(255,222,140,0) 100%), ` : '';
+  if (w.buy){ el.style.bottom = '0'; el.style.background = gold + `linear-gradient(to top, rgba(${col},${a}) 0%, rgba(${col},${a*0.4}) 45%, rgba(${col},0) 100%)`; }
+  else      { el.style.top = '0';    el.style.background = gold + `linear-gradient(to bottom, rgba(${col},${a}) 0%, rgba(${col},${a*0.4}) 45%, rgba(${col},0) 100%)`; }
   $('flashLayer').appendChild(el); flashLive++;
   const big = w.usd >= 5e6;                                          // 500만 이상은 두 번 깜박
   const kf = big ? [{opacity:0},{opacity:1,offset:.12},{opacity:.25,offset:.4},{opacity:.9,offset:.55},{opacity:0}]
@@ -1636,6 +1688,68 @@ function addWhale(w){
   if (state.whales.length > 600) state.whales.splice(0, state.whales.length-600);
   renderWhales(); renderFoot();
 }
+
+/* ---------- 크리스마스 모드: 툴바의 트리 버튼으로 켜고 끔 ----------
+   켜면 <html class="xmas"> → 인터페이스 색(솔잎 초록·호랑가시 빨강·금색)·상단 전구줄·눈이 적용되고,
+   고래 플래시 그라데이션도 크리스마스 색으로 바뀐다. 끄면 원래 화면과 원래 그라데이션 그대로. */
+const XMAS = {on:false, cv:null, g:null, W:0, H:0, dpr:1, flakes:[], raf:0, last:0, lights:null};
+const XMAS_REDUCE = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;     // 모션 줄이기 설정이면 눈·반짝임 없음
+function xmFlake(init){
+  const r = 0.8 + Math.random()*1.9;
+  return {x:Math.random()*XMAS.W, y: init ? Math.random()*XMAS.H : -6, r, vy:14 + r*10 + Math.random()*12,
+          sw:8 + Math.random()*18, ph:Math.random()*6.283, sp:0.4 + Math.random()*0.9, a:0.35 + Math.random()*0.45};
+}
+function xmSnowSize(){
+  if (!XMAS.cv) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  XMAS.W = window.innerWidth; XMAS.H = window.innerHeight; XMAS.dpr = dpr;
+  XMAS.cv.width = Math.round(XMAS.W*dpr); XMAS.cv.height = Math.round(XMAS.H*dpr);
+  XMAS.g = XMAS.cv.getContext('2d');
+  const n = Math.min(XMAS.W < 700 ? 40 : 85, Math.round(XMAS.W*XMAS.H/18000));
+  while (XMAS.flakes.length < n) XMAS.flakes.push(xmFlake(true));
+  XMAS.flakes.length = Math.min(XMAS.flakes.length, n);
+}
+function xmSnowLoop(now){
+  if (!XMAS.on){ XMAS.raf = 0; return; }
+  XMAS.raf = requestAnimationFrame(xmSnowLoop);
+  if (document.hidden || now - XMAS.last < 33) return;                 // 약 30fps
+  const dt = XMAS.last ? Math.min(0.1, (now - XMAS.last)/1000) : 0.033; XMAS.last = now;
+  const g = XMAS.g, W = XMAS.W, H = XMAS.H; if (!g) return;
+  g.setTransform(XMAS.dpr, 0, 0, XMAS.dpr, 0, 0); g.clearRect(0, 0, W, H); g.fillStyle = '#fff';
+  for (let i = 0; i < XMAS.flakes.length; i++){
+    const f = XMAS.flakes[i];
+    f.y += f.vy*dt; f.ph += f.sp*dt;
+    if (f.y > H + 6){ XMAS.flakes[i] = xmFlake(false); continue; }
+    g.globalAlpha = f.a; g.beginPath(); g.arc(f.x + Math.sin(f.ph)*f.sw, f.y, f.r, 0, 6.2832); g.fill();
+  }
+  g.globalAlpha = 1;
+}
+function xmasSet(on, save){
+  XMAS.on = !!on;
+  document.documentElement.classList.toggle('xmas', XMAS.on);
+  const b = $('xmasBtn'); b.classList.toggle('act', XMAS.on); b.setAttribute('aria-pressed', XMAS.on ? 'true' : 'false');
+  if (save){ try{ localStorage.setItem('qd_xmas', XMAS.on ? '1' : '0'); }catch{} }
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = XMAS.on ? '#0d1b14' : '#11151d';
+  const bd = XMAS.on ? '#23402f' : '#1f2633';                           // 차트 축 글자·테두리·격자도 같이 바꿈
+  try{ chart.applyOptions({layout:{textColor: XMAS.on ? '#b9cfbf' : '#aab3c5'},
+                           grid:{vertLines:{color: XMAS.on ? '#10241a' : '#141a24'}, horzLines:{color: XMAS.on ? '#10241a' : '#141a24'}},
+                           rightPriceScale:{borderColor:bd}, timeScale:{borderColor:bd}}); }catch{}
+  if (XMAS.on){
+    if (!XMAS.cv){
+      XMAS.cv = document.createElement('canvas'); XMAS.cv.id = 'snowCv'; XMAS.cv.setAttribute('aria-hidden', 'true'); document.body.appendChild(XMAS.cv);
+      XMAS.lights = document.createElement('div'); XMAS.lights.id = 'xmasLights'; XMAS.lights.setAttribute('aria-hidden', 'true'); document.body.appendChild(XMAS.lights);
+    }
+    if (XMAS_REDUCE){ XMAS.cv.style.display = 'none'; }
+    else { XMAS.cv.style.display = 'block'; xmSnowSize(); if (!XMAS.raf) XMAS.raf = requestAnimationFrame(xmSnowLoop); }
+  } else if (XMAS.cv){
+    if (XMAS.raf){ cancelAnimationFrame(XMAS.raf); XMAS.raf = 0; }
+    XMAS.cv.style.display = 'none'; if (XMAS.g) XMAS.g.clearRect(0, 0, XMAS.cv.width, XMAS.cv.height); XMAS.flakes.length = 0;
+  }
+}
+$('xmasBtn').onclick = () => xmasSet(!XMAS.on, true);
+window.addEventListener('resize', () => { if (XMAS.on && !XMAS_REDUCE) xmSnowSize(); });
+setTimeout(() => $('indBtn').insertAdjacentElement('afterend', $('xmasBtn')), 0);   // 다른 스크립트가 인디케이터 옆에 버튼을 끼워 넣은 뒤에도 항상 인디케이터 바로 오른쪽에 위치
+(() => { let v = null; try{ v = localStorage.getItem('qd_xmas'); }catch{} xmasSet(v !== '0', false); })();      // 처음 열면 켜짐 (끄면 기억)
 function onLiq(o){
   const usd = (+o.ap || +o.p) * +o.z;
   if (!usd) return;
@@ -2909,7 +3023,7 @@ $('tfBar').addEventListener('click', e => {
   }
   tick();
 })();
-$('chkVol').onchange = e => volume.applyOptions({visible:e.target.checked});
+$('chkVol').onchange = e => (window.__setVol ? window.__setVol(e.target.checked) : volume.applyOptions({visible:e.target.checked}));
 ['chkLiq','chkHL'].forEach(id => $(id).onchange = drawBubbles);
 (function(){      // 차트 오른쪽 옵션 패널 열기/닫기 (상태 기억)
   const side=$('optSide'), btn=$('optToggle');
@@ -2981,7 +3095,7 @@ setInterval(pollSnap, PAPER ? 700 : 2500);
    같은 지표를 여러 개 추가 가능(예: MA 7·25·99), 설정(기간·색)·숨김·삭제, 새로고침해도 유지(localStorage) */
 (function(){
 const PAL=['#f0b90b','#4c8dff','#e056fd','#16c79a','#ff8c42','#00d2d3','#f0476a','#a29bfe'];
-const UP='#16c79a', DN='#f0476a', INT=new Set(['len','fast','slow','sig']);
+const UP='#16c79a', DN='#f0476a', INT=new Set(['len','fast','slow','sig','conv','base','spanb','disp']);
 const col=(r,k)=>r.map(x=>x[k]);
 const sma=(a,n)=>{const o=Array(a.length).fill(null);let s=0;for(let i=0;i<a.length;i++){s+=a[i];if(i>=n)s-=a[i-n];if(i>=n-1)o[i]=s/n;}return o;};
 const ema=(a,n)=>{const o=Array(a.length).fill(null),k=2/(n+1);let e=null,c=0;for(let i=0;i<a.length;i++){if(a[i]==null)continue;e=e==null?a[i]:a[i]*k+e*(1-k);if(++c>=n)o[i]=e;}return o;};
@@ -3024,11 +3138,16 @@ const DEF={
   calc:(r,p)=>[rma(r.map((x,i)=>i?Math.max(x.high-x.low,Math.abs(x.high-r[i-1].close),Math.abs(x.low-r[i-1].close)):x.high-x.low),p.len)]},
  obv:{n:'OBV',d:'누적 거래량',sub:1,p:{},f:'v',
   calc:r=>{let o=0;return [r.map((x,i)=>{if(i)o+=x.close>r[i-1].close?x.vol:x.close<r[i-1].close?-x.vol:0;return o;})];}},
+ ichi:{n:'구름대',d:'일목균형표 구름대 (선행스팬 A·B 만 표시)',p:{conv:9,base:26,spanb:52,disp:26},f:'p',k:2,cols:['#16c79a','#f0476a'],L:['선행스팬 A','선행스팬 B'],cloud:1,
+  calc:(r,p)=>{const h=col(r,'high'),l=col(r,'low'),n=r.length,d=Math.min(200,Math.max(1,Math.round(p.disp))),A=Array(n+d).fill(null),B=Array(n+d).fill(null);
+   const mid=(len,i)=>i<len-1?null:(hi(h,len,i)+lo(l,len,i))/2;
+   for(let i=0;i<n;i++){const t=mid(p.conv,i),k=mid(p.base,i);if(t!=null&&k!=null)A[i+d]=(t+k)/2;const s=mid(p.spanb,i);if(s!=null)B[i+d]=s;}
+   return [A,B];}},
  wr:{n:'W%R',d:'윌리엄스 %R',sub:1,p:{len:14},f:'2',ref:[-80,-20],
   calc:(r,p)=>{const h=col(r,'high'),l=col(r,'low');return [r.map((x,i)=>{if(i<p.len-1)return null;const H=hi(h,p.len,i),L=lo(l,p.len,i);return H===L?-50:-100*(H-x.close)/(H-L);})];}},
 };
 /*@@UI@@*/
-const PL={len:'기간',mult:'표준편차 배수',step:'가속 단계',max:'최대 가속',fast:'단기',slow:'장기',sig:'시그널'};
+const PL={len:'기간',mult:'표준편차 배수',step:'가속 단계',max:'최대 가속',fast:'단기',slow:'장기',sig:'시그널',conv:'전환선 기간',base:'기준선 기간',spanb:'선행스팬 B 기간',disp:'선행 이동(봉 수)'};
 const inds=[]; let uidc=0, ver=0, tmIdx=new Map(), lastN=0;
 const lay=document.createElement('div'); lay.id='indLay'; $('chartWrap').appendChild(lay);
 const modal=document.createElement('div'); modal.id='indModal';
@@ -3037,6 +3156,38 @@ document.body.appendChild(modal);
 const save=()=>{ try{ localStorage.setItem('qd_inds',JSON.stringify(inds.map(i=>({id:i.id,p:i.p,c:i.c,on:i.on})))); }catch{} };
 const fv=(D,y)=>D.f==='v'?(y<0?'-':'')+fmtVol(Math.abs(y)):D.f==='2'?y.toFixed(2):nf(y,decimalsFor(state.lastCandle?state.lastCandle.close:y)+(D.sub?1:0));
 
+const hexA=(h,a)=>{const m=/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(h||'');return m?`rgba(${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)},${a})`:`rgba(128,128,128,${a})`;};
+function cloudPrim(){      // 선행스팬 A·B 사이를 칠하는 레이어 (캔들·선 아래에 그려짐)
+  const P={A:null,B:null,off:0,vis:true,up:hexA(UP,.2),dn:hexA(DN,.2),chart:null,series:null,req:null};
+  const draw=target=>{
+    if(!P.vis||!P.A||!P.chart||!P.series) return;
+    target.useBitmapCoordinateSpace(({context:c,horizontalPixelRatio:hr,verticalPixelRatio:vr})=>{
+      const ts=P.chart.timeScale(), vr0=ts.getVisibleLogicalRange(); if(!vr0) return;
+      const i0=Math.max(1,Math.floor(vr0.from)-P.off-1), i1=Math.min(P.A.length-1,Math.ceil(vr0.to)-P.off+1);
+      const X=i=>ts.logicalToCoordinate(i+P.off), Y=v=>P.series.priceToCoordinate(v);
+      let run=null;      // 같은 색으로 이어지는 구간을 한 덩어리로 칠함 (조각마다 칠하면 겹쳐서 세로 줄무늬가 생김)
+      const flush=()=>{ if(!run) return; const pts=run.top.concat(run.bot.slice().reverse()); c.fillStyle=run.col; c.beginPath();
+        pts.forEach(([x,y],k)=>k?c.lineTo(x*hr,y*vr):c.moveTo(x*hr,y*vr)); c.closePath(); c.fill(); run=null; };
+      const begin=(col,x,ya,yb)=>{ flush(); run={col,top:[[x,ya]],bot:[[x,yb]],end:x}; };
+      const push=(x,ya,yb)=>{ run.top.push([x,ya]); run.bot.push([x,yb]); run.end=x; };
+      for(let i=i0;i<=i1;i++){
+        const a0=P.A[i-1],b0=P.B[i-1],a1=P.A[i],b1=P.B[i]; if(a0==null||b0==null||a1==null||b1==null){ flush(); continue; }
+        const x0=X(i-1),x1=X(i); if(x0==null||x1==null){ flush(); continue; }
+        const ya0=Y(a0),yb0=Y(b0),ya1=Y(a1),yb1=Y(b1); if(ya0==null||yb0==null||ya1==null||yb1==null){ flush(); continue; }
+        const d0=a0-b0,d1=a1-b1;
+        if(d0*d1>=0){ const col=(d0+d1)>=0?P.up:P.dn; if(!run||run.col!==col||run.end!==x0) begin(col,x0,ya0,yb0); push(x1,ya1,yb1); }
+        else{ const t=d0/(d0-d1),xm=x0+(x1-x0)*t,ym=ya0+(ya1-ya0)*t,c0=d0>=0?P.up:P.dn,c1=d1>=0?P.up:P.dn;      // 두 선이 교차하는 칸은 교점에서 색을 바꿈
+          if(!run||run.col!==c0||run.end!==x0) begin(c0,x0,ya0,yb0); push(xm,ym,ym); begin(c1,xm,ym,ym); push(x1,ya1,yb1); }
+      }
+      flush();
+    });
+  };
+  const view={zOrder:()=> 'bottom',renderer:()=>({draw})};
+  return {attached(q){P.chart=q.chart;P.series=q.series;P.req=q.requestUpdate;},detached(){P.chart=P.series=P.req=null;},paneViews:()=>[view],updateAllViews(){},
+    set(A,B,off){P.A=A;P.B=B;P.off=off;P.req&&P.req();},
+    setColors(c){P.up=hexA(c[0],.2);P.dn=hexA(c[1],.2);P.req&&P.req();},
+    setVisible(v){P.vis=v;P.req&&P.req();}};
+}
 function build(it){
   const D=DEF[it.id]; it.ss=[];
   for(let j=0;j<(D.k||1);j++){
@@ -3045,11 +3196,15 @@ function build(it){
     it.ss.push(D.hist===j ? chart.addHistogramSeries(o)
       : chart.addLineSeries({...o,color:it.c[j],lineWidth:1,lineVisible:!D.dots,pointMarkersVisible:!!D.dots,pointMarkersRadius:2}));
   }
+  if(D.cloud){ it.prim=cloudPrim(); it.prim.setColors(it.c); it.prim.setVisible(it.on); it.ss[0].attachPrimitive(it.prim); }
   if(D.ref) D.ref.forEach(v=>it.ss[0].createPriceLine({price:v,color:'#3a4254',lineWidth:1,lineStyle:2,axisLabelVisible:false,title:''}));
 }
-function layout(){       // 하단 패널 개수에 따라 메인 차트·거래량·각 지표 영역의 높이 비율을 다시 나눔
+const volOn=()=>volume.options().visible!==false;
+function setVol(on){ volume.applyOptions({visible:on}); $('chkVol').checked=on; try{ localStorage.setItem('qd_vol',on?'1':'0'); }catch{} layout(); if(modal.classList.contains('open')&&!$('imB').dataset.u) showList(); }
+window.__setVol=setVol;
+function layout(){       // 하단 패널 개수에 따라 메인 차트·거래량·각 지표 영역의 높이 비율을 다시 나눔 (거래량을 끄면 그 자리도 가격에 돌려줌)
   const subs=inds.filter(i=>DEF[i.id].sub), N=subs.length, h=N?Math.min(.17,.5/N):0, tot=N*h, R=1-tot;
-  chart.priceScale('right').applyOptions({scaleMargins:{top:.06,bottom:tot+.22*R}});
+  chart.priceScale('right').applyOptions({scaleMargins:{top:.06,bottom:tot+(volOn()?.22:.06)*R}});
   chart.priceScale('vol').applyOptions({scaleMargins:{top:R*.82,bottom:tot}});
   subs.forEach((it,k)=>{ const yt=R+k*h; it.band=[yt,yt+h]; chart.priceScale('i'+it.uid).applyOptions({scaleMargins:{top:yt+.02,bottom:1-(yt+h)+.02}}); });
 }
@@ -3062,9 +3217,10 @@ function recalc(){
     const D=DEF[it.id]; let out; try{ out=D.calc(rows,it.p); }catch(e){ console.warn('지표 계산 실패',it.id,e); continue; }
     it.vals=out;
     out.forEach((v,j)=>{
-      const pts=[]; for(let i=0;i<rows.length;i++){ const y=v[i]; if(y==null||!isFinite(y)) continue; const pt={time:rows[i].time,value:y}; if(D.hist===j) pt.color=y>=0?'rgba(22,199,154,.55)':'rgba(240,71,106,.55)'; pts.push(pt); }
+      const pts=[]; for(let i=0;i<v.length;i++){ const y=v[i]; if(y==null||!isFinite(y)) continue; const pt={time:i<rows.length?rows[i].time:rows[rows.length-1].time+(i-rows.length+1)*(TF_SEC[state.tf]||60),value:y}; if(D.hist===j) pt.color=y>=0?'rgba(22,199,154,.55)':'rgba(240,71,106,.55)'; pts.push(pt); }
       it.ss[j].setData(pts);
     });
+    if(D.cloud&&it.prim) it.prim.set(out[0],out[1],d0.length-rows.length);
     if(D.sub&&D.f==='p'&&it.dec!==dec){ it.dec=dec; const o={priceFormat:{type:'price',precision:dec+1,minMove:Math.pow(10,-dec-1)}}; it.ss.forEach(s=>s.applyOptions(o)); }
   }
   tmIdx=new Map(rows.map((r,i)=>[r.time,i])); lastN=rows.length; paint(null);
@@ -3101,7 +3257,8 @@ function showList(){
   const q=$('indQ').value.trim().toLowerCase(); let h='';
   for(const [g,t] of [[0,'메인 차트 (가격 위에 표시)'],[1,'보조 지표 (하단 패널)']]){
     const ids=Object.keys(DEF).filter(id=>!!DEF[id].sub===!!g&&(DEF[id].n+' '+DEF[id].d).toLowerCase().includes(q));
-    if(ids.length) h+=`<div class="ig">${t}</div>`+ids.map(id=>{const c=inds.filter(i=>i.id===id).length;return `<div class="ii" data-id="${id}"><b>${DEF[id].n}</b><span>${DEF[id].d}</span>${c?`<em>${c}</em>`:''}</div>`;}).join('');
+    const vol=g===0&&'거래량 volume 하단 거래량 막대 켜기 끄기'.includes(q)&&(!q||'거래량 volume'.includes(q)||'하단 거래량 막대'.includes(q))?`<div class="ii" data-vol="1"><b>거래량</b><span>하단 거래량 막대 켜기·끄기</span><em>${volOn()?'ON':'OFF'}</em></div>`:'';
+    if(ids.length||vol) h+=`<div class="ig">${t}</div>`+vol+ids.map(id=>{const c=inds.filter(i=>i.id===id).length;return `<div class="ii" data-id="${id}"><b>${DEF[id].n}</b><span>${DEF[id].d}</span>${c?`<em>${c}</em>`:''}</div>`;}).join('');
   }
   $('imB').innerHTML=h||'<div class="ie">검색 결과가 없습니다</div>';
 }
@@ -3117,14 +3274,14 @@ const close=()=>{ modal.classList.remove('open'); $('indBtn').classList.remove('
 $('indBtn').onclick=()=>modal.classList.contains('open')?close():open();
 modal.addEventListener('click',e=>{
   if(e.target===modal||e.target.id==='imX'){ close(); return; }
-  const ii=e.target.closest('.ii'); if(ii){ add(ii.dataset.id); return; }
+  const ii=e.target.closest('.ii'); if(ii){ if(ii.dataset.vol){ setVol(!volOn()); return; } add(ii.dataset.id); return; }
   if(e.target.id==='imBack') showList();
 });
 $('indQ').addEventListener('input',showList);
 $('imB').addEventListener('input',e=>{
   const it=inds.find(i=>i.uid===+$('imB').dataset.u), t=e.target; if(!it) return;
   if(t.dataset.k){ let v=parseFloat(t.value); if(!(v>0)) return; if(INT.has(t.dataset.k)) v=Math.min(1000,Math.max(1,Math.round(v))); it.p[t.dataset.k]=v; ver++; recalc(); render(); save(); }
-  else if(t.dataset.c!=null){ const j=+t.dataset.c; it.c[j]=t.value; it.ss[j].applyOptions({color:t.value}); render(); save(); }
+  else if(t.dataset.c!=null){ const j=+t.dataset.c; it.c[j]=t.value; it.ss[j].applyOptions({color:t.value}); if(it.prim) it.prim.setColors(it.c); render(); save(); }
 });
 window.addEventListener('keydown',e=>{ if(e.key==='Escape'&&modal.classList.contains('open')) close(); });
 lay.addEventListener('click',e=>{
@@ -3132,7 +3289,7 @@ lay.addEventListener('click',e=>{
   const u=+b.closest('.irow').dataset.u, it=inds.find(i=>i.uid===u); if(!it) return;
   if(b.dataset.a==='del') removeInd(u);
   else if(b.dataset.a==='set'){ open(); showSet(u); }
-  else { it.on=!it.on; it.ss.forEach(s=>s.applyOptions({visible:it.on})); render(); save(); }
+  else { it.on=!it.on; it.ss.forEach(s=>s.applyOptions({visible:it.on})); if(it.prim) it.prim.setVisible(it.on); render(); save(); }
 });
 chart.subscribeCrosshairMove(p=>paint(p.time||null));
 let ck='';       // 캔들·거래량이 바뀐 때만 0.4초 간격으로 다시 계산 (실시간 틱마다 전체 재계산하지 않도록)
@@ -3147,6 +3304,7 @@ try{        // 저장된 지표 복원
     inds.push(it); build(it);
   });
 }catch{}
+try{ if(localStorage.getItem('qd_vol')==='0') setVol(false); }catch{}
 layout(); render();
 })();
 
@@ -3411,6 +3569,44 @@ $('tpReset').onclick = () => {
 setInterval(tradeRefresh, 700);
 { let ot = null; try{ ot = localStorage.getItem('paper_otype'); }catch{} setTpType(ot === 'Market' ? 'Market' : 'Limit'); }
 pfeedSync();
+
+/* ---------- 차트 우클릭 메뉴: 그 위치의 가격을 주문 패널 '지정가 가격'에 바로 입력 ---------- */
+(() => {
+  const wrap = $('chartWrap'), menu = document.createElement('div');
+  menu.id = 'chartCtx';
+  menu.innerHTML = '<div class="ch">가격<b class="num" id="ctxPx">-</b></div>' +
+    '<button type="button" id="ctxLimit">📍 지정가 가격에 입력</button>';
+  document.body.appendChild(menu);
+  let px = 0, line = null;
+  const clearLine = () => { if (line){ try{ candle.removePriceLine(line); }catch{} line = null; } };
+  const close = () => { menu.classList.remove('open'); clearLine(); };
+  const inPlot = (x, y) => x >= 0 && y >= 0 && x < chart.timeScale().width() && y < chart.paneSize().height;
+  wrap.addEventListener('contextmenu', e => {
+    const r = $('chart').getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    if (!inPlot(x, y)) return;                              // 가격축·시간축 위에서는 기본 동작
+    let v = candle.coordinateToPrice(y); if (!(v > 0)) return;
+    e.preventDefault(); e.stopPropagation();
+    px = paper.roundPrice(state.sym, v) || v;
+    $('ctxPx').textContent = tpFmtPx(px);
+    clearLine(); line = candle.createPriceLine({price: px, color: '#4c8dff', lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: ''});
+    menu.classList.add('open');
+    const mw = menu.offsetWidth, mh = menu.offsetHeight;
+    menu.style.left = Math.max(4, Math.min(e.clientX, innerWidth - mw - 4)) + 'px';
+    menu.style.top  = Math.max(4, Math.min(e.clientY, innerHeight - mh - 4)) + 'px';
+  }, true);
+  $('ctxLimit').onclick = () => {
+    if (!(px > 0)) return close();
+    if (!document.body.classList.contains('tradeOn')) $('tpBtn').click();   // 주문 패널이 닫혀 있으면 열기
+    if (_tpType !== 'Limit') setTpType('Limit');                              // 시장가 상태면 지정가로 전환
+    $('tpPrice').value = tpFmtPx(px); tradeRefresh();
+    toast(`지정가 가격 ${tpFmtPx(px)} 입력`, true);
+    close();
+  };
+  document.addEventListener('pointerdown', e => { if (menu.classList.contains('open') && !menu.contains(e.target)) close(); }, true);
+  window.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  window.addEventListener('resize', close); window.addEventListener('blur', close);
+  wrap.addEventListener('wheel', close, {passive: true});
+})();
 
 /* ============================================================
    차트 위 포지션 상태 태그 + 지정가 주문 · TP/SL 드래그
