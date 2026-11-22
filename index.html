@@ -199,6 +199,8 @@
   #optModal #optPanel>label.chk input[type=checkbox]:checked::after{transform:translateX(18px)}
   #optModal #optPanel>label.chk input[type=checkbox]:focus-visible{box-shadow:0 0 0 2px rgba(255,147,34,.45)}
   #optModal #optPanel>#sndTest{align-self:flex-start;margin:4px 0 6px}
+  #optModal #optPanel>#tpReset{margin-top:14px;padding:10px 0;width:100%;font-size:13px;font-weight:700;color:var(--dn);background:rgba(240,71,106,.08);border:1px solid rgba(240,71,106,.5);border-radius:8px}
+  #optModal #optPanel>#tpReset:hover{background:rgba(240,71,106,.18)}
   #optPanel label.chk{cursor:pointer;white-space:nowrap}
   #optPanel input[type=range]{width:100%;margin:0}
   .dbtn{position:relative;width:40px;height:34px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:6px;color:#d1d4dc;cursor:pointer}
@@ -379,15 +381,12 @@
   }
 
   /* 좁은 화면: 툴바의 "고래·청산" 버튼으로 왼쪽 목록을 차트 위에 겹쳐서 열기/닫기 */
-  #whaleBtn{display:inline-block;flex:none}
   @media (min-width:901px) and (min-height:501px){      /* 넓은 화면: 왼쪽 패널을 접으면 차트가 전체 폭을 씀 */
     body.asideOff #app{grid-template-columns:1fr}
     body.asideOff aside{display:none}
     body.asideOff header{grid-column:1}
   }
-  #whaleBtn.act{background:var(--accent);border-color:var(--accent);color:#fff}
   @media (max-width:900px),(max-height:500px){
-    #whaleBtn{display:inline-block}
     body.showAside aside{display:flex;position:fixed;z-index:40;left:env(safe-area-inset-left,0px);top:var(--asideTop,90px);bottom:env(safe-area-inset-bottom,0px);width:min(260px,86vw);border:1px solid var(--line);border-left:0;box-shadow:8px 0 24px rgba(0,0,0,.5)}
   }
 
@@ -494,19 +493,30 @@
   #posLay .ga{position:absolute;left:0;top:0;height:18px;line-height:18px;text-align:center;background:#fff;color:#111;font:700 11px/18px ui-monospace,Consolas,monospace;display:none}
   @media (pointer:coarse){#posLay .pt{height:28px;font-size:12px;line-height:26px}#posLay .pt button{padding:0 11px}#posLay .pt .gp{padding:0 8px}}
   /* ===== 모의거래 패널 ===== */
-  #tpBtn{flex:none}
+  #tpBtn{flex:none;display:flex;align-items:center;justify-content:center;width:30px;height:26px;padding:0;margin-right:2px}
+  #tpBtn:hover{border-color:var(--accent)}
   #tpBtn.act{background:var(--accent);border-color:var(--accent);color:#fff}
   #tradePanel{display:none;flex:none;width:268px;flex-direction:column;gap:9px;padding:10px 12px 12px;background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;scrollbar-width:thin;font-size:12px;user-select:none}
   body.tradeOn #tradePanel{display:flex}
-  #tradePanel .tpH{display:flex;align-items:center;gap:8px;font-size:13px}
+  #tradePanel .tpH{display:flex;align-items:center;gap:5px;font-size:13px}
+  #tradePanel .tpH .tpTabs.sm{padding:2px}
+  #tradePanel .tpH .tpTabs.sm button{padding:3px 8px}
+  #tradePanel .tpH #tpLevBtn,#tradePanel .tpH #tpReset{white-space:nowrap}
   #tpTitle{display:none}   /* 패널 제목 글자(모의거래/실거래)는 숨김 — 아래 PAPER/LIVE 배지로 구분 */
   #tradePanel .tpBadge{font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(76,141,255,.16);color:var(--accent);font-weight:700;letter-spacing:.5px}
   #tradePanel .tpSp{flex:1}
   #tradePanel .tpH button{padding:2px 9px;font-size:11px}
-  #tpHedge.on{background:var(--accent);border-color:var(--accent);color:#fff}
-  #tpHedge{flex:none}
-  #tpHedge.lock:not(.on){opacity:.55}
-  #tpHedge.lock{cursor:not-allowed}
+  #tradePanel .tpH{flex-wrap:wrap;row-gap:6px}
+  #tradePanel .tpHgW{position:relative;flex:none}
+  #tradePanel #tpHgBtn{display:flex;align-items:center;gap:8px;padding:4px 8px 4px 10px;background:#0e121a;border:1px solid var(--line);border-radius:8px;color:var(--txt);font-size:12px;font-weight:700;white-space:nowrap}
+  #tradePanel #tpHgBtn i{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--dim)}
+  #tradePanel #tpHgBtn:hover,#tradePanel .tpHgW.open #tpHgBtn{border-color:var(--accent)}
+  #tradePanel #tpHgBtn.lock{opacity:.7}
+  #tradePanel #tpHg{position:absolute;right:0;top:calc(100% + 4px);z-index:60;display:none;flex-direction:column;gap:2px;min-width:100%;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.55)}
+  #tradePanel .tpHgW.open #tpHg{display:flex}
+  #tradePanel #tpHg button{padding:6px 10px;font-size:12px;text-align:left;white-space:nowrap;background:none;border:0;border-radius:6px;color:var(--dim);font-weight:700}
+  #tradePanel #tpHg button.on{background:var(--accent);color:#fff}
+  html.xmas #tradePanel #tpHgBtn{background:#0a1711}
   #tradePanel .tpAcct,#tradePanel .tpInfo{display:flex;flex-direction:column;gap:5px;padding:8px 10px;background:#0e121a;border:1px solid var(--line);border-radius:8px}
   #tradePanel .tpAcct>div,#tradePanel .tpInfo>div,#tradePanel .tpRow2{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
   #tradePanel .tpAcct span,#tradePanel .tpInfo span,#tradePanel .tpRow2 span{color:var(--dim)}
@@ -515,8 +525,12 @@
   #tradePanel .tpMode{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--dim);font-size:11px}
   #tradePanel .tpMode b{color:var(--txt)}
   #tradePanel .tpLevW{position:relative;flex:none}
-  #tradePanel .tpH button#tpLevBtn{padding:2px 7px;white-space:nowrap}
-  #tradePanel #tpLevBtn.open{background:var(--accent);border-color:var(--accent);color:#fff}
+  #tradePanel .tpH button#tpLevBtn{display:flex;align-items:center;gap:8px;padding:4px 8px 4px 10px;background:#0e121a;border:1px solid var(--line);border-radius:8px;font-size:12px;white-space:nowrap}
+  #tradePanel #tpLevBtn b{color:#ff8a1f;font-weight:700}
+  #tradePanel #tpLevBtn i{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--dim)}
+  #tradePanel #tpLevBtn:hover{border-color:var(--accent)}
+  html.xmas #tradePanel #tpLevBtn{background:#0a1711}
+  #tradePanel #tpLevBtn.open{border-color:var(--accent)}
   #tpLevPop{display:none;position:fixed;left:0;top:0;z-index:5000;width:200px;color:var(--txt);font-size:12px;padding:8px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.5)}
   #tpLevPop.open{display:block}
   #tpLevPop .lpRow{display:flex;align-items:center;gap:6px}
@@ -530,6 +544,21 @@
   #tradePanel .tpTabs button.on{background:var(--accent);color:#fff}
   #tradePanel .tpTabs.sm{flex:none}
   #tradePanel .tpTabs.sm button{flex:none;padding:3px 12px;font-size:11px}
+  /* Limit / Market: 박스 없이 글자만 (선택=주황, 미선택=회색) */
+  #tradePanel #tpType{background:none;border:0;padding:0;gap:14px;justify-content:flex-start}
+  #tradePanel #tpType button{flex:none;padding:2px 0;background:none;border:0;border-radius:0;font-size:16px;font-weight:700;color:var(--dim)}
+  #tradePanel #tpType button.on{background:none;color:#ff8a1f}
+  #tradePanel #tpType button:not(.on):hover{color:var(--txt)}
+  /* Cross / Isolated: 드롭다운 (테마 색 그대로) */
+  #tradePanel .tpMgnW{position:relative;flex:none}
+  #tradePanel #tpMgnBtn{display:flex;align-items:center;gap:8px;padding:4px 8px 4px 10px;background:#0e121a;border:1px solid var(--line);border-radius:8px;color:var(--txt);font-size:12px;font-weight:700}
+  #tradePanel #tpMgnBtn i{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--dim)}
+  #tradePanel #tpMgnBtn:hover,#tradePanel .tpMgnW.open #tpMgnBtn{border-color:var(--accent)}
+  #tradePanel #tpMgnBtn.lock{opacity:.7}
+  #tradePanel #tpMgn{position:absolute;left:0;top:calc(100% + 4px);z-index:60;display:none;flex-direction:column;gap:2px;min-width:100%;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.55)}
+  #tradePanel .tpMgnW.open #tpMgn{display:flex}
+  #tradePanel #tpMgn button{padding:6px 10px;font-size:12px;text-align:left;white-space:nowrap}
+  html.xmas #tradePanel #tpMgnBtn{background:#0a1711}
   #tradePanel .tpTabs.lock button:not(.on){opacity:.4;cursor:not-allowed}
   #tradePanel .tpTabs.lock button.on{cursor:not-allowed}
   /* Price / Quantity 입력칸 */
@@ -561,6 +590,8 @@
   #tradePanel .tpBtns .buy{background:var(--up)} #tradePanel .tpBtns .sell{background:var(--dn)}
   #tradePanel .tpBtns button:hover{filter:brightness(1.12)} #tradePanel .tpBtns button:active{filter:brightness(.9)}
   #tradePanel .tpNote{color:var(--dim);font-size:10.5px;line-height:1.5}
+  #tradePanel .tpNote:empty{display:none}
+  #tradePanel .tpH .tpSp{display:none}   /* 레버리지를 Cross 드롭다운 바로 옆에 붙임 */
   #tpToast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:200;max-width:min(520px,92vw);padding:10px 16px;border-radius:8px;background:#1a2030;border:1px solid var(--line);box-shadow:0 8px 28px rgba(0,0,0,.55);font-size:13px;line-height:1.45;opacity:0;pointer-events:none;transition:opacity .18s}
   #tpToast.on{opacity:1}
   /* 차트 우클릭 메뉴 */
@@ -574,14 +605,21 @@
   #tpToast.ok{border-color:var(--up)} #tpToast.err{border-color:var(--dn)}
   .pbtn{padding:2px 9px;font-size:11px;margin-right:4px}
   .lcCell{white-space:nowrap}
-  .lcIn{width:76px;padding:2px 5px;font-size:11px;margin-right:4px;box-sizing:border-box}
+  .lcIn{width:76px;padding:2px 5px;font-size:11px;margin-right:4px;box-sizing:border-box;background:#0e121a;color:var(--txt);border:1px solid var(--line);border-radius:6px;font-family:inherit;outline:none}
+  .lcIn:focus{border-color:var(--accent)}
+  .lcIn::placeholder{color:var(--dim);opacity:.8}
   @media (max-width:900px),(max-height:500px){
     #tradePanel{position:absolute;right:30px;top:0;bottom:0;z-index:31;width:min(268px,82vw);box-shadow:-8px 0 20px rgba(0,0,0,.35)}
   }
 
   /* ===== 실거래 ===== */
-  #liveBtn{flex:none}
-  #liveBtn.act{background:var(--dn);border-color:var(--dn);color:#fff}
+  /* 헤더(시계 왼쪽) 거래소 API 연동 버튼 */
+  #apiBar{display:flex;align-items:center;gap:4px;margin-right:4px}
+  #apiBar button{position:relative;display:flex;align-items:center;gap:0;padding:3px 9px;font-size:12px;font-weight:700;line-height:1.3;white-space:nowrap}
+  #apiBar button .ex{margin-right:5px}
+  #apiBar button:hover{border-color:var(--accent)}
+  #apiBar button.act{border-color:var(--up);box-shadow:inset 0 0 0 1px var(--up);color:#fff}
+  #apiBar button.act::after{content:'';position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:var(--up);box-shadow:0 0 0 2px var(--panel)}
   #tradePanel .tpBadge.live{background:rgba(240,71,106,.18);color:var(--dn)}
   body.liveOn #tradePanel{border-left:2px solid var(--dn)}
   #tpLiveNote{color:var(--dn)}
@@ -679,7 +717,16 @@
     <div class="stat"><span class="k">롱/숏 계정비율(5m)</span><span class="num" id="ls">-</span></div>
     <div class="stat"><span class="k">마크가 / 인덱스</span><span class="num" id="mark">-</span></div>
     <div class="stat"><span class="k">USDT 가격 (업비트)</span><span class="num" id="usdt">-</span></div>
-    <div class="conn"><span class="num" id="clock"></span></div>
+    <div class="conn">
+      <button id="tpBtn" type="button" title="모의거래 패널 열기/닫기" aria-label="모의거래"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2.2h12.4a1.5 1.5 0 0 0 1.3-2.2L14 9V3"/><path d="M7.5 15h9"/></svg></button>
+      <span id="apiBar" role="group" aria-label="거래소 API 연동">
+        <button type="button" data-k="binance" title="Binance API 연동">Binance</button>
+        <button type="button" data-k="okx" title="OKX API 연동">OKX</button>
+        <button type="button" data-k="bybit" title="Bybit API 연동">Bybit</button>
+        <button type="button" data-k="bitget" title="Bitget API 연동">Bitget</button>
+      </span>
+      <span class="num" id="clock"></span>
+    </div>
   </header>
 
   <aside>
@@ -730,10 +777,6 @@
       <button id="cloudBtn" class="wxBtn" type="button" title="구름 흘러가기 켜기/끄기" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 1 1 .9-8.9A5.5 5.5 0 0 1 18.5 11 3.5 3.5 0 0 1 18 18z"/></svg></button>
       <button id="newsBtn" class="wxBtn" type="button" title="코인니스 속보 팝업 켜기/끄기" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg></button>
       <span class="sp"></span>
-      <button id="tpHedge" type="button" title="헤지 모드: 롱·숏 동시 보유 (포지션·대기 주문이 없을 때만 바꿀 수 있어요)">헤지모드</button>
-      <button id="liveBtn" type="button" title="실거래 연결 (Binance · OKX · Bitget · Bybit)">실거래</button>
-      <button id="tpBtn" type="button" title="모의거래 패널 열기/닫기">모의거래</button>
-      <button id="whaleBtn" type="button" title="고래 체결 · 청산 목록 열기/닫기">고래·청산</button>
     </div>
     <div id="chartRow">
       <div id="dtools"></div>
@@ -752,8 +795,8 @@
         <button id="autoBtn" type="button" title="자동 스케일 (가격에 맞춰 차트 따라가기)">A</button>
       </div>
       <div id="tradePanel">
-        <div class="tpH"><b id="tpTitle">모의거래</b><span class="tpBadge" id="tpBadge">PAPER</span><span class="tpSp"></span><span class="tpLevW"><button id="tpLevBtn" type="button" title="레버리지 설정">레버리지 <b class="num" id="tpLevV">10x</b></button><div id="tpLevPop"><div class="lpRow"><input type="number" id="tpLevIn" min="1" step="1" inputmode="numeric" autocomplete="off"><span class="lpX">x</span><button type="button" id="tpLevOk">적용</button></div><div class="lpChips" id="tpLevChips"></div></div></span><button id="tpReset" type="button" title="계좌 초기화">리셋</button></div>
-        <div class="tpTabs" id="tpType"><button type="button" data-t="Limit">지정가</button><button type="button" data-t="Market">시장가</button></div>
+        <div class="tpH"><b id="tpTitle">모의거래</b><div class="tpMgnW" id="tpMgnW"><button type="button" id="tpMgnBtn" aria-haspopup="listbox"><span>Cross</span><i></i></button><div class="tpTabs sm" id="tpMgn" role="listbox"><button type="button" data-m="cross">Cross</button><button type="button" data-m="isolated">Isolated</button></div></div><span class="tpBadge" id="tpBadge" style="display:none"></span><span class="tpSp"></span><div class="tpHgW" id="tpHgW"><button type="button" id="tpHgBtn" aria-haspopup="listbox" title="Position mode"><span>One-way</span><i></i></button><div id="tpHg" role="listbox"><button type="button" data-h="one">One-way</button><button type="button" data-h="hedge">Hedge</button></div></div><span class="tpLevW"><button id="tpLevBtn" type="button" title="레버리지 설정"><b class="num" id="tpLevV">10x</b><i></i></button><div id="tpLevPop"><div class="lpRow"><input type="number" id="tpLevIn" min="1" step="1" inputmode="numeric" autocomplete="off"><span class="lpX">x</span><button type="button" id="tpLevOk">적용</button></div><div class="lpChips" id="tpLevChips"></div></div></span></div>
+        <div class="tpTabs" id="tpType"><button type="button" data-t="Limit">Limit</button><button type="button" data-t="Market">Market</button></div>
         <div class="tpField" id="tpPriceF">
           <div class="fb"><span class="fl" id="tpPriceL">Price</span><input type="number" id="tpPrice" min="0" step="any" inputmode="decimal" autocomplete="off"></div>
           <button type="button" class="tpLast" id="tpLast" title="현재가 넣기">Last</button>
@@ -765,10 +808,10 @@
           <input type="number" id="tpQty" min="0" step="any" placeholder="Quantity" inputmode="decimal" autocomplete="off">
           <div class="tpUnitW"><select id="tpUnit"><option value="coin">BTC</option><option value="usdt">USDT</option></select></div>
         </div>
-        <div class="tpMode"><div class="tpTabs sm" id="tpMgn"><button type="button" data-m="cross">교차</button><button type="button" data-m="isolated">격리</button></div><span><span id="tpPm">원웨이</span> · <b id="tpSym">BTCUSDT</b></span></div>
+        <div class="tpMode" style="display:none"><span><span id="tpPm">원웨이</span> · <b id="tpSym">BTCUSDT</b></span></div>
         <input type="hidden" id="tpLev" value="100">
         <div class="tpPct" id="tpPct"><button type="button" data-p="25">25%</button><button type="button" data-p="50">50%</button><button type="button" data-p="75">75%</button><button type="button" data-p="100">100%</button></div>
-        <div class="tpBtns"><button type="button" id="tpBuy" class="buy">롱 (Buy)</button><button type="button" id="tpSell" class="sell">숏 (Sell)</button></div>
+        <div class="tpBtns"><button type="button" id="tpBuy" class="buy">Buy</button><button type="button" id="tpSell" class="sell">Sell</button></div>
         <div class="tpInfo">
           <div><span>주문 가치</span><b class="num" id="tpVal">-</b></div>
           <div><span>필요 증거금</span><b class="num" id="tpIm">-</b></div>
@@ -1844,6 +1887,7 @@ if (typeof module !== 'undefined') module.exports = PaperEngine;
 <div id="optModal"><div class="omBox" role="dialog" aria-label="설정">
   <div class="omHd"><b>설정</b><button type="button" id="omX" title="닫기">✕</button></div>
         <div id="optPanel">
+          <label class="chk"><input type="checkbox" id="chkWhale">고래·청산 목록</label>
           <label class="chk"><input type="checkbox" id="chkLiq" checked>청산 마커</label>
           <label class="chk"><input type="checkbox" id="chkFlash" checked>고래 플래시</label>
           <label class="chk"><input type="checkbox" id="chkSnd" checked>고래 사운드</label>
@@ -1854,6 +1898,7 @@ if (typeof module !== 'undefined') module.exports = PaperEngine;
           <label class="chk"><input type="checkbox" id="chkDay" checked>일봉 캔들</label>
           <label class="chk"><input type="checkbox" id="chkSig" checked>진입 신호</label>
           <label class="chk"><input type="checkbox" id="chkHL" checked>최고·최저가 표시</label>
+          <button id="tpReset" type="button" title="모의 계좌를 초기화해요 (모의거래 전용)">모의거래 리셋</button>
         </div>
 </div></div>
 <div id="atModal"><div class="atBox" role="dialog" aria-label="자동매매 설정">
@@ -2982,7 +3027,7 @@ function newsToast(cls, head, title, body, href){
   const x = document.createElement('button'); x.className = 'nx'; x.type = 'button'; x.title = '닫기'; x.textContent = '✕'; el.append(x);
   let timer = 0;
   const close = () => { clearTimeout(timer); el.classList.add('out'); setTimeout(() => el.remove(), 260); };
-  const arm = () => { clearTimeout(timer); timer = setTimeout(close, 3000); };
+  const arm = () => { clearTimeout(timer); timer = setTimeout(close, 5000); };
   x.addEventListener('click', e => { e.stopPropagation(); close(); });
   if (href) el.addEventListener('click', () => { window.open(href, '_blank', 'noopener'); close(); });
   el.addEventListener('mouseenter', () => clearTimeout(timer)); el.addEventListener('mouseleave', arm);
@@ -2990,11 +3035,21 @@ function newsToast(cls, head, title, body, href){
   while (NEWS.pop.children.length > 4) NEWS.pop.firstElementChild.remove();
   arm();
 }
+function newsChime(){                                                  // 속보 팝업 알림음: 높은 '띵' → 낮은 '동' 두 음 (고래 실로폰과 구분되는 초인종 느낌, 볼륨은 설정의 사운드 볼륨을 따름)
+  if (!SND.ready || !SND.ctx || Date.now() - (SND.lastNews || 0) < 700) return;
+  SND.lastNews = Date.now();
+  try{
+    if (SND.ctx.state === 'suspended') SND.ctx.resume();
+    const t = SND.ctx.currentTime + 0.02;
+    sndNote(1046.5, t, 0.22); sndNote(784, t + 0.16, 0.22);
+  }catch(e){}
+}
 function newsShow(it){
   const id = String(it.id).replace(/\D/g, ''); if (!id) return;
   const t = it.publishAt ? new Date(it.publishAt) : null;
   const tm = t && !isNaN(t) ? t.toLocaleTimeString('ko-KR', {hour12: false, hour: '2-digit', minute: '2-digit'}) : '';
   const title = String(it.title || '').trim(), body = String(it.content || '').trim();
+  newsChime();
   newsToast('', ['⚡ 코인니스 속보', tm], title || body.slice(0, 80) || '(제목 없음)', title ? body : '', 'https://coinness.com/news/' + id);
 }
 async function newsPoll(){
@@ -3004,7 +3059,7 @@ async function newsPoll(){
     const a = await newsFetch();
     if (!a){
       $('newsBtn').title = '코인니스 속보 — 불러오지 못했어요 (30초마다 다시 시도)';
-      if (!NEWS.failed){ NEWS.failed = true; newsToast('info', ['코인니스 속보'], '속보를 불러오지 못했어요', '네트워크나 브라우저 차단 때문일 수 있어요. 계속 다시 시도해요.'); }
+      NEWS.failed = true;                                                // 실패해도 팝업은 띄우지 않고 조용히 다시 시도
       return;
     }
     NEWS.failed = false; $('newsBtn').title = '코인니스 속보 팝업 켜기/끄기';
@@ -3372,7 +3427,7 @@ function tblPos(list){
       <td class="num ${cls(up)}">${sgn(up)} <span class="dim">USDT</span> (${sgn(roi,2)}%)</td>
       <td class="num ${cls(real)}">${sgn(real)} <span class="dim">USDT</span></td>
       <td class="num">${tp ? `<span class="up">${fp(tp)}</span>` : '--'} / ${sl ? `<span class="dn">${fp(sl)}</span>` : '--'}</td>
-      ${PAPER ? `<td class="lcCell"><input class="lcIn" type="number" step="any" inputmode="decimal" placeholder="가격" data-k="${esc(p.symbol + ':' + p.side)}" data-f="p" value="${esc((LCV[p.symbol + ':' + p.side] || {}).p || '')}"><input class="lcIn" type="number" step="any" inputmode="decimal" placeholder="수량(비움=전체)" title="코인 수량 — 비우면 전체" data-k="${esc(p.symbol + ':' + p.side)}" data-f="q" value="${esc((LCV[p.symbol + ':' + p.side] || {}).q || '')}"><button class="pbtn" data-act="lclose" data-sym="${esc(p.symbol)}" data-id="${esc(p.side)}" title="입력한 가격에 지정가(감소전용)로 닫기">닫기</button></td>` : ''}
+      ${PAPER ? `<td class="lcCell"><input class="lcIn" type="number" step="any" inputmode="decimal" placeholder="가격" data-k="${esc(p.symbol + ':' + p.side)}" data-f="p" value="${esc((LCV[p.symbol + ':' + p.side] || {}).p || '')}"><input class="lcIn" type="number" step="any" inputmode="decimal" placeholder="수량" title="코인 수량 — 비우면 전체" data-k="${esc(p.symbol + ':' + p.side)}" data-f="q" value="${esc((LCV[p.symbol + ':' + p.side] || {}).q || '')}"><button class="pbtn" data-act="lclose" data-sym="${esc(p.symbol)}" data-id="${esc(p.side)}" title="입력한 가격에 지정가(감소전용)로 닫기">닫기</button></td>` : ''}
       ${PAPER ? `<td><button class="pbtn" data-act="close" data-sym="${esc(p.symbol)}" data-id="${esc(p.side)}" title="시장가로 전부 닫기">전체</button><button class="pbtn" data-act="half" data-sym="${esc(p.symbol)}" data-id="${esc(p.side)}" title="시장가로 절반 닫기">50%</button></td>` : ''}
     </tr>`;
   }).join('');
@@ -4618,18 +4673,22 @@ $('tfBar').addEventListener('click', e => {
   upd();
 })();
 
-(function(){      // 고래 체결·청산 목록 열기/닫기 (넓은 화면: 왼쪽 패널 접기/펴기 · 좁은 화면: 차트 위에 겹쳐서 열기)
-  const btn=$('whaleBtn'), mq=matchMedia('(max-width:900px), (max-height:500px)'), body=document.body;
+(function(){      // 고래 체결·청산 목록 열기/닫기 — 설정(톱니바퀴) 안의 스위치 (넓은 화면: 왼쪽 패널 접기/펴기 · 좁은 화면: 차트 위에 겹쳐서 열기)
+  const chk=$('chkWhale'), mq=matchMedia('(max-width:900px), (max-height:500px)'), body=document.body;
   let off=false; try{ off=localStorage.getItem('qd_asideOff')==='1'; }catch{}
   body.classList.toggle('asideOff',off);
-  const paint=()=>btn.classList.toggle('act', mq.matches ? body.classList.contains('showAside') : !body.classList.contains('asideOff'));
+  const paint=()=>{ chk.checked = mq.matches ? body.classList.contains('showAside') : !body.classList.contains('asideOff'); };
   const overlay=on=>{ if(on) document.documentElement.style.setProperty('--asideTop',Math.round($('tfBar').getBoundingClientRect().bottom)+'px');
     body.classList.toggle('showAside',on); paint(); };
   const wide=on=>{ body.classList.toggle('asideOff',!on); try{ localStorage.setItem('qd_asideOff',on?'0':'1'); }catch{} paint(); };
-  btn.onclick=e=>{ e.stopPropagation(); if(mq.matches) overlay(!body.classList.contains('showAside')); else wide(body.classList.contains('asideOff')); };
-  document.addEventListener('click',e=>{ if(mq.matches&&body.classList.contains('showAside')&&!e.target.closest('aside')&&!e.target.closest('#whaleBtn')) overlay(false); });
+  chk.addEventListener('change',()=>{
+    if(mq.matches){ overlay(chk.checked); if(chk.checked) $('optModal').classList.remove('open'); }   // 좁은 화면: 켜면 설정 창을 닫아 목록이 바로 보이게
+    else wide(chk.checked);
+  });
+  document.addEventListener('click',e=>{ if(mq.matches&&body.classList.contains('showAside')&&!e.target.closest('aside')&&!e.target.closest('#optModal')) overlay(false); });
   const mqc=()=>{ if(!mq.matches) overlay(false); paint(); };
   mq.addEventListener?mq.addEventListener('change',mqc):mq.addListener(mqc);
+  $('optToggle').addEventListener('click',paint);
   paint();
 })();
 
@@ -4910,6 +4969,7 @@ function lmMsg(t, bad){ const e = lm('lmMsg'); e.textContent = t || ''; e.classN
 function lmPaint(){
   const X = LA.EXCHANGES[lmSel], saved = !!lread(LS_KEYS)[lmSel];
   lm('lmEx').innerHTML = Object.keys(LA.EXCHANGES).map(k => `<button type="button" data-k="${k}" class="${k === lmSel ? 'on' : ''}">${exIcon(k)}${LA.EXCHANGES[k].name}</button>`).join('');
+  lmEl.querySelector('.lmH b').textContent = X.name + ' API 연동';
   lm('lmPassW').style.display = X.pass ? '' : 'none';
   lm('lmTestW').style.display = X.test ? '' : 'none';
   lm('lmTestT').textContent = X.test || '';
@@ -4924,7 +4984,14 @@ function lmPaint(){
 }
 const lmOpen = () => { lmMsg(''); lmPaint(); lmEl.classList.add('open'); };
 const lmClose = () => { lmEl.classList.remove('open'); lm('lmKey').value = lm('lmSec').value = lm('lmPass').value = lm('lmPw').value = ''; };
-$('liveBtn').onclick = e => { e.stopPropagation(); lmOpen(); };
+document.querySelectorAll('#apiBar button').forEach(b => {                    // 거래소 아이콘 (로고를 못 불러오면 빈칸 없이 글자만)
+  b.insertAdjacentHTML('afterbegin', exIcon(b.dataset.k));
+  const im = b.querySelector('i.ex img'); if (im) im.addEventListener('error', () => { const i = b.querySelector('i.ex'); if (i) i.remove(); });
+});
+$('apiBar').addEventListener('click', e => {                 // 시계 왼쪽 거래소 버튼 → 그 거래소의 API 연동 창
+  const b = e.target.closest('button[data-k]'); if (!b) return;
+  e.stopPropagation(); lmSel = b.dataset.k; lmMsg(''); lmOpen();
+});
 lm('lmX').onclick = lmClose;
 lmEl.addEventListener('pointerdown', e => { if (e.target === lmEl) lmClose(); });
 window.addEventListener('keydown', e => { if (e.key === 'Escape' && lmEl.classList.contains('open')) lmClose(); });
@@ -4986,12 +5053,15 @@ function liveDisconnect(){
 function liveSkin(){
   const on = LIVE.on;
   document.body.classList.toggle('liveOn', on);
-  $('liveBtn').classList.toggle('act', on);
-  $('liveBtn').textContent = on ? '실거래 · ' + LIVE.name : '실거래';
+  document.querySelectorAll('#apiBar button').forEach(b => {   // 연결된 거래소 버튼에 초록 표시
+    const me = on && LIVE.id === b.dataset.k, nm = LA.EXCHANGES[b.dataset.k].name;
+    b.classList.toggle('act', me);
+    b.title = me ? `${nm}${LIVE.test ? ' 테스트' : ''} 연결됨 — 눌러서 재연결·해제` : `${nm} API 연동`;
+  });
   $('tpTitle').textContent = on ? '실거래' : '모의거래';
-  const b = $('tpBadge'); b.textContent = on ? 'LIVE · ' + LIVE.name.toUpperCase() + (LIVE.test ? ' TEST' : '') : 'PAPER'; b.classList.toggle('live', on);
+  const b = $('tpBadge'); b.textContent = on ? 'LIVE · ' + LIVE.name.toUpperCase() + (LIVE.test ? ' TEST' : '') : ''; b.style.display = on ? '' : 'none'; b.classList.toggle('live', on);
   $('tpReset').style.display = on ? 'none' : '';
-  $('tpHedge').style.display = on ? 'none' : '';
+  $('tpHgW').style.display = on ? 'none' : '';
   $('tpLiveNote').style.display = on ? '' : 'none';
   $('tpBtn').title = on ? '주문 패널 열기/닫기 (실거래 연결 중)' : '모의거래 패널 열기/닫기';
   LIVE.cfgKey = ''; _tpSym = '';
@@ -5270,14 +5340,17 @@ function tradeRefresh(){
 
   // 포지션 모드 (원웨이 / 헤지) 표시 + 헤지 버튼 상태
   const hg = LIVE.on ? !!LIVE.hedge : !!paper.s.hedge, hgLock = !LIVE.on && (Object.keys(paper.s.pos).length > 0 || paper.s.orders.length > 0);
-  $('tpPm').textContent = hg ? '헤지' : '원웨이';
-  $('tpHedge').classList.toggle('on', hg); $('tpHedge').classList.toggle('lock', hgLock);
-  $('tpHedge').title = hgLock ? '포지션이나 대기 주문이 있으면 포지션 모드를 바꿀 수 없어요' : (hg ? '헤지 모드 켜짐 — 누르면 원웨이로' : '헤지 모드: 롱·숏 동시 보유 (포지션·대기 주문이 없을 때만 바꿀 수 있어요)');
+  $('tpPm').textContent = hg ? 'Hedge' : 'One-way';
+  $('tpHgBtn').firstElementChild.textContent = hg ? 'Hedge' : 'One-way';
+  [...$('tpHg').children].forEach(b => b.classList.toggle('on', (b.dataset.h === 'hedge') === hg));
+  $('tpHgBtn').classList.toggle('lock', hgLock);
+  $('tpHgBtn').title = hgLock ? '포지션이나 대기 주문이 있으면 포지션 모드를 바꿀 수 없어요' : 'Position mode (포지션·대기 주문이 없을 때만 바꿀 수 있어요)';
   // 마진 모드 토글 (포지션·대기 주문이 있으면 잠금)
   const mode = eng().modeOf(state.sym), lock = !!eng()._posList(state.sym).length || eng().s.orders.some(o => o.symbol === state.sym);
   [...$('tpMgn').children].forEach(b => b.classList.toggle('on', b.dataset.m === mode));
   $('tpMgn').classList.toggle('lock', lock);
-  $('tpMgn').title = lock ? '이 종목에 포지션이나 대기 주문이 있으면 마진 모드를 바꿀 수 없어요' : '';
+  { const mb = $('tpMgnBtn'); mb.firstElementChild.textContent = mode === 'cross' ? 'Cross' : 'Isolated'; mb.classList.toggle('lock', lock); }
+  $('tpMgnBtn').title = $('tpMgn').title = lock ? '이 종목에 포지션이나 대기 주문이 있으면 마진 모드를 바꿀 수 없어요' : '';
 
   // 주문 미리보기
   const px = tpRef(), lev = +$('tpLev').value, q = tpReadQty(), limit = _tpType === 'Limit';
@@ -5302,9 +5375,7 @@ function setTpType(t){
   $('tpPriceL').textContent = mk ? 'Price · 시장가' : 'Price';
   if (mk) $('tpStepPop').classList.remove('open');
   pIn.value = tpPx() > 0 ? tpFmtPx(tpPx()) : '';
-  $('tpNote').textContent = mk
-    ? '시장가는 현재 체결가로 바로 체결돼요. 수량 단위를 USDT로 두면 “주문 가치(수량×가격)” 기준이고, 증거금은 가치÷레버리지예요.'
-    : '';
+  $('tpNote').textContent = '';                      // 시장가 안내 문구는 표시하지 않음
   tradeRefresh();
 }
 $('tpType').addEventListener('click', e => { const b = e.target.closest('button[data-t]'); if (b) setTpType(b.dataset.t); });
@@ -5335,6 +5406,13 @@ document.addEventListener('click', e => { if (!e.target.closest('#tpStepPop')) $
 })();
 
 /* 격리 / 교차 */
+(() => {                                                      // 드롭다운 열기·닫기
+  const w = $('tpMgnW');
+  $('tpMgnBtn').addEventListener('click', e => { e.stopPropagation(); w.classList.toggle('open'); });
+  $('tpMgn').addEventListener('click', () => w.classList.remove('open'));
+  document.addEventListener('pointerdown', e => { if (!w.contains(e.target)) w.classList.remove('open'); });
+  window.addEventListener('keydown', e => { if (e.key === 'Escape') w.classList.remove('open'); });
+})();
 $('tpMgn').addEventListener('click', e => {
   const b = e.target.closest('button[data-m]'); if (!b) return;
   if (LIVE.on) return liveSetMode(b.dataset.m);
@@ -5430,14 +5508,24 @@ $('tpLev').addEventListener('change', () => {               // 레버리지를 �
   } else toast(`${baseOf(state.sym)} 레버리지 ${r.lev}x 적용`, true);
   lastPanelHtml = ''; pollSnap(); tradeRefresh();
 });
-$('tpHedge').onclick = () => {
-  if (LIVE.on) return;
-  const r = paper.setHedge(!paper.s.hedge);
+(() => {                                                      // 포지션 모드 드롭다운 열기·닫기
+  const w = $('tpHgW');
+  $('tpHgBtn').addEventListener('click', e => { e.stopPropagation(); w.classList.toggle('open'); });
+  $('tpHg').addEventListener('click', () => w.classList.remove('open'));
+  document.addEventListener('pointerdown', e => { if (!w.contains(e.target)) w.classList.remove('open'); });
+  window.addEventListener('keydown', e => { if (e.key === 'Escape') w.classList.remove('open'); });
+})();
+$('tpHg').addEventListener('click', e => {
+  const b = e.target.closest('button[data-h]'); if (!b || LIVE.on) return;
+  const want = b.dataset.h === 'hedge';
+  if (want === !!paper.s.hedge) return;
+  const r = paper.setHedge(want);
   if (!r.ok) return toast(r.error, false);
   toast(r.hedge ? '헤지 모드 ON — 롱·숏을 동시에 들고 가요. 매수=롱 진입, 매도=숏 진입 (닫기는 표의 전체/50% 버튼이나 차트 ✕)' : '원웨이 모드로 바꿨어요 — 반대 주문은 기존 포지션을 줄여요', true);
   lastPanelHtml = ''; pollSnap(); tradeRefresh(); pfeedSync();
-};
+});
 $('tpReset').onclick = () => {
+  $('optModal').classList.remove('open');
   const v = prompt('모의 계좌를 초기화합니다.\n모든 포지션·주문·내역이 지워지고 아래 금액으로 다시 시작해요.\n\n시작 잔고 (USDT):', String(paper.s.start));
   if (v === null) return;
   const n = parseFloat(String(v).replace(/,/g, ''));
